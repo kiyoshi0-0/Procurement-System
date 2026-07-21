@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+// legaspi 3:02pm
 @section('content')
 <!-- Logic para sa Consistent Status Color at Tracker[cite: 3] -->
 @php
