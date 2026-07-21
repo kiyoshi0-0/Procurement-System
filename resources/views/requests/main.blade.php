@@ -71,7 +71,7 @@
           </button>
         </div>
 
-        <!-- Dynamic Loop Rows Content Section -->
+<!-- Dynamic Loop Rows Content Section -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-200">
             <h3 class="text-lg font-bold text-[#1E3A8A]">All Request History</h3>
@@ -91,17 +91,19 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto">
+          <!-- Scrollable Table Container (Shows ~5 rows) -->
+          <div class="max-h-[320px] overflow-y-auto overflow-x-auto relative">
             <table class="w-full border-collapse text-left text-xs">
-              <thead class="bg-gray-300 text-gray-700 uppercase font-semibold border-b border-gray-200 tracking-wider">
-                  <th class="p-4 pl-6">Req. ID</th>
-                  <th class="p-4">Department</th>
-                  <th class="p-4">Items</th>
-                  <th class="p-4">Priority</th>
-                  <th class="p-4">Submitted</th>
-                  <th class="p-4">Requestor</th>
-                  <th class="p-4">Status</th>
-                  <th class="p-4 text-center">Actions</th>
+              <thead class="bg-gray-300 text-gray-700 uppercase font-semibold border-b border-gray-200 tracking-wider sticky top-0 z-10">
+                <tr>
+                  <th class="p-4 pl-6 bg-gray-300">Req. ID</th>
+                  <th class="p-4 bg-gray-300">Department</th>
+                  <th class="p-4 bg-gray-300">Items</th>
+                  <th class="p-4 bg-gray-300">Priority</th>
+                  <th class="p-4 bg-gray-300">Submitted</th>
+                  <th class="p-4 bg-gray-300">Requestor</th>
+                  <th class="p-4 bg-gray-300">Status</th>
+                  <th class="p-4 text-center bg-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody id="request-table-rows" class="divide-y divide-gray-200 text-xs font-medium text-gray-600">
@@ -161,9 +163,6 @@
             </table>
           </div>
         </div>
-      </main>
-    </div>
-  </div>
 
   <!-- Create Request Modal (Multi-step Form) -->
   <div id="newRequestModal" class="fixed inset-0 bg-black/50 z-60 hidden items-center justify-center p-4">
