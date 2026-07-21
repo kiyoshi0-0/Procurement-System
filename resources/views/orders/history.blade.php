@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+// subion 2:45
 @section('content')
 <!-- Compact container layout -->
 <div class="max-w-2xl mx-auto p-5">
