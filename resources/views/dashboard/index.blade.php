@@ -278,8 +278,10 @@
 
         <!-- Vertical Module Actions Blocks Grid Array -->
         <div class="lg:col-span-3 flex flex-col gap-5">
+            <!-- Vertical Module Actions Blocks Grid Array -->
+        <div class="lg:col-span-3 flex flex-col gap-5">
             <!-- Button 1: Create Order -->
-            <a href="{{ url('/create') }}"
+            <a href="{{ route('orders.create') }}"
                 class="w-full bg-bg-actionBlue hover:bg-bg-actionBlueHover text-slate-900 font-bold py-4 px-5 rounded-2xl flex items-center space-x-4 transition-all transform active:scale-[0.99] shadow-sm group">
                 <div class="bg-white/40 p-2 rounded-xl text-slate-800 group-hover:scale-105 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
