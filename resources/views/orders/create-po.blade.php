@@ -15,12 +15,14 @@
         <!-- Main Form Section: Increased gap for wider layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div class="space-y-6">
-                <!-- Supplier Select -->
+                <!-- Supplier Select (Synced from Database) -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-2">Supplier</label>
-                    <select name="supplier" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none">
-                        <option value="TicTac PC">TicTac PC</option>
-                        <option value="MasterPc">MasterPc</option>
+                    <select name="supplier_id" id="supplier_id" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="">-- Select Supplier --</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 

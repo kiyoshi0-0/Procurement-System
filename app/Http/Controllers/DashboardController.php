@@ -5,20 +5,51 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PurchaseRequest;
+use App\Models\Supplier;
+use App\Models\Purchase;
+
 class DashboardController extends Controller
 {
+    public function index()
+    {
+        // 1. Metric Scorecard Totals
+        $pendingRequestsCount = PurchaseRequest::whereRaw('LOWER(status) = ?', ['pending'])->count();
+        $activeSuppliersCount = Supplier::count();
+        $purchaseOrdersCount  = Purchase::count();
+        $totalSpending        = Purchase::sum('total_price');
+
+        // 2. Latest Purchase Orders Table (Top 6 latest entries)
+        $latestOrders = Purchase::with('supplier')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // 3. Status Pie Chart Aggregation (Delivered / Pending / Cancelled counts)
+        $deliveredCount = Purchase::whereRaw('LOWER(status) = ?', ['delivered'])->orWhereRaw('LOWER(status) = ?', ['completed'])->count();
+        $pendingCount   = Purchase::whereRaw('LOWER(status) = ?', ['pending'])->count();
+        $cancelledCount = Purchase::whereRaw('LOWER(status) = ?', ['cancelled'])->orWhereRaw('LOWER(status) = ?', ['rejected'])->count();
+        $totalOrdersForChart = $deliveredCount + $pendingCount + $cancelledCount;
+
+        // Calculate chart percentages safely
+        $chartData = [
+            'delivered' => $totalOrdersForChart > 0 ? round(($deliveredCount / $totalOrdersForChart) * 100, 1) : 0,
+            'pending'   => $totalOrdersForChart > 0 ? round(($pendingCount / $totalOrdersForChart) * 100, 1) : 0,
+            'cancelled' => $totalOrdersForChart > 0 ? round(($cancelledCount / $totalOrdersForChart) * 100, 1) : 0,
+        ];
+
+        return view('dashboard.index', compact(
+            'pendingRequestsCount',
+            'activeSuppliersCount',
+            'purchaseOrdersCount',
+            'totalSpending',
+            'latestOrders',
+            'chartData'
+        ));
+    }
 
     public function create() {
         return view('dashboard.create');
-    }
-
-    public function index()
-    {
-        // Fetch all records from the orders database table
-        $orders = DB::table('orders')->orderBy('created_at', 'desc')->get();
-
-        // Look for the flat file 'order-index.blade.php'
-        return view('dashboard.index', compact('orders'));
     }
 
     public function generate() {
@@ -28,7 +59,6 @@ class DashboardController extends Controller
     // --- FUNCTION 2: HANDLE SAVING NEW ORDERS ---
     public function store(Request $request)
     {
-        // 1. Validate the incoming data from your form layout
         $request->validate([
             'supplier_id' => 'required',
             'po_date' => 'required|date',
@@ -36,10 +66,7 @@ class DashboardController extends Controller
             'items' => 'required|array|min:1',
         ]);
 
-        // 2. Process using a database transaction for complete safety
         DB::transaction(function () use ($request) {
-            
-            // Insert data into your main orders table
             $orderId = DB::table('orders')->insertGetId([
                 'supplier_id' => $request->input('supplier_id'),
                 'po_date' => $request->input('po_date'),
@@ -56,12 +83,9 @@ class DashboardController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Loop through the indexed items array sent from your JavaScript table rows
             foreach ($request->input('items') as $item) {
-                // Extract the row item's identifier name
                 $name = $item['name'] ?? ($item['item_name'] ?? null);
 
-                // SKIP saving if the row's item name/field value is completely empty
                 if (empty(trim($name))) {
                     continue;
                 }
@@ -77,30 +101,25 @@ class DashboardController extends Controller
             }
         });
 
-        // 3. Return directly to the orders log page (updated route destination!)
         return redirect('/orders')->with('success', 'Purchase order created successfully!');
     }
 
     // --- FUNCTION 3: DOWNLOAD ORDER DATA NATIVELY AS A TRUE PDF ---
     public function downloadPDF($id)
     {
-        // Fetch order details
         $order = DB::table('orders')->where('id', $id)->first();
         
         if (!$order) {
             return abort(404, 'Purchase order not found.');
         }
 
-        // Fetch all specific individual items matching this sequence identifier
         $items = DB::table('order_items')->where('order_id', $id)->get();
 
-        // Calculate totals dynamically
         $totalAmount = 0;
         foreach ($items as $item) {
             $totalAmount += ($item->price * $item->quantity);
         }
 
-        // Build elegant formal page rendering structure
         $html = "
         <!DOCTYPE html>
         <html>
@@ -207,21 +226,15 @@ class DashboardController extends Controller
         </body>
         </html>";
 
-        // Generate the PDF from our HTML template string natively
         $pdf = Pdf::loadHTML($html);
-        
         $fileName = "Purchase_Order_000" . $order->id . ".pdf";
         return $pdf->download($fileName);
     }
 
-    // --- FUNCTION 4: PERMANENTLY REMOVE ORDER & ASSIGNED ITEMS ---
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            // First clear structural relational dependencies (Order Line Items)
             DB::table('order_items')->where('order_id', $id)->delete();
-            
-            // Delete the main parent record
             DB::table('orders')->where('id', $id)->delete();
         });
 

@@ -12,14 +12,19 @@ class PurchaseOrder extends Model
     protected $fillable = [
         'po_number',
         'date',
-        'supplier',
+        'supplier_id', // Changed from string 'supplier' to foreign key ID
         'status',
-        'delivery_address'
+        'delivery_address',
     ];
 
-    // Koneksyon sa table ng Purchase Order Items
+    // Define the relationship: A purchase order belongs to a supplier
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
     public function items()
     {
-        return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
+        return $this->hasMany(PurchaseOrderItem::class);
     }
 }

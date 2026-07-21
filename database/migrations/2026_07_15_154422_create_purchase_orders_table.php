@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->id();
             $table->string('po_number')->unique(); // e.g., PO-101
             $table->date('date');
-            $table->string('supplier'); // e.g., TicTac PC, MasterPc
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
             $table->string('status')->default('Confirmed'); // Confirmed, Sent, Delivered, Cancelled
             $table->text('delivery_address');
             $table->timestamps();

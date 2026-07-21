@@ -11,7 +11,7 @@
             @forelse($purchases as $item)
             <div class="border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50/30">
                 <div class="flex items-center space-x-4">
-                    {{-- Dynamic Icon and Color Section --}}
+                    {{-- Dynamic Icon Section --}}
                     @if($item->supplier)
                         <div class="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center text-xl {{ $item->supplier->category_icon_color }}">
                             <i class="fa-solid {{ $item->supplier->category_icon }}"></i>
@@ -23,11 +23,18 @@
                     @endif
                     
                     <div>
-                        <h4 class="font-bold text-gray-800 text-sm">
-                            {{ $item->supplier->name ?? 'Unknown Supplier' }}
+                        {{-- 1. PRIMARY: Item Name (Bigger, Bold, Darker Text) --}}
+                        <h4 class="font-bold text-gray-900 text-base leading-snug">
+                            {{ $item->item_name }}
                         </h4>
-                        <p class="text-xs text-gray-600 font-medium mt-0.5">{{ $item->item_name }}</p>
-                        <p class="text-[11px] text-gray-400 mt-1 font-mono">{{ $item->po_number }}</p>
+
+                        {{-- 2. SECONDARY: Supplier Name (Smaller, Muted Text) --}}
+                        <p class="text-xs text-gray-500 font-medium mt-0.5">
+                            <span class="text-gray-400">Supplier:</span> {{ $item->supplier->name ?? 'Unknown Supplier' }}
+                        </p>
+
+                        {{-- 3. TERTIARY: PO Number --}}
+                        <p class="text-[11px] text-gray-400 mt-0.5 font-mono">{{ $item->po_number }}</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-12 text-xs">

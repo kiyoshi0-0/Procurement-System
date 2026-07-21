@@ -51,8 +51,9 @@
             <input type="date" id="tableDateFilter" onchange="filterTableRows()" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
             <select id="tableSupplierFilter" onchange="filterTableRows()" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
                 <option value="">All Suppliers</option>
-                <option value="TicTac PC">TicTac PC</option>
-                <option value="MasterPc">MasterPc</option>
+                @foreach(\App\Models\Supplier::all() as $s)
+                    <option value="{{ $s->name }}">{{ $s->name }}</option>
+                @endforeach
             </select>
         </div>
 
@@ -82,7 +83,7 @@
                         <tr data-status="{{ $po->status }}" class="po-table-row bg-gray-50 rounded-lg hover:bg-gray-100 transition shadow-sm cursor-pointer" onclick="viewPoDetails('{{ $po->po_number }}')">
                             <td class="p-4 rounded-l-lg text-blue-600 hover:underline target-po">{{ $po->po_number }}</td>
                             <td class="p-4 target-date">{{ $po->created_at?->format('Y-m-d') }}</td>
-                            <td class="p-4 target-supplier">{{ $po->supplier }}</td>
+                            <td class="p-4 target-supplier">{{ $po->supplier->name ?? 'No Supplier' }}</td>
                             <td class="p-4">₱ {{ number_format($total) }}</td>
                             <td class="p-4"><span class="{{ $statusColor }} text-[11px] px-3 py-1 rounded-full font-bold uppercase">{{ $po->status }}</span></td>
                             <td class="p-4 rounded-r-lg text-center" onclick="event.stopPropagation()">
