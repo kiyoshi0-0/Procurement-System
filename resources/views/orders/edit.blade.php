@@ -1,5 +1,5 @@
 @extends('layouts.app')
-// Arevalo 2:44 pm
+
 @section('content')
 <section id="edit-po-view" class="view-panel space-y-6 max-w-7xl w-full mx-auto p-6">
     <!-- Header Section -->

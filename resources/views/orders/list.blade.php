@@ -80,8 +80,8 @@
                                 default => 'bg-red-100 text-red-600',
                             };
                         @endphp
-                        <tr data-status="{{ $po->status }}" class="po-table-row bg-gray-50 rounded-lg hover:bg-gray-100 transition shadow-sm cursor-pointer" onclick="viewPoDetails('{{ $po->po_number }}')">
-                            <td class="p-4 rounded-l-lg text-blue-600 hover:underline target-po">{{ $po->po_number }}</td>
+                        <tr data-status="{{ $po->status }}" class="po-table-row bg-gray-50 rounded-lg hover:bg-gray-100 transition shadow-sm">
+                            <td class="p-4 rounded-l-lg font-bold text-gray-900 target-po">{{ $po->po_number }}</td>
                             <td class="p-4 target-date">{{ $po->created_at?->format('Y-m-d') }}</td>
                             <td class="p-4 target-supplier">{{ $po->supplier->name ?? 'No Supplier' }}</td>
                             <td class="p-4">₱ {{ number_format($total) }}</td>

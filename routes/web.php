@@ -60,6 +60,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/create', [PurchaseOrderController::class, 'create'])->name('create');
     Route::get('/history', [PurchaseOrderController::class, 'history'])->name('history');
     
+    Route::get('/orders/{po_number}', [PurchaseOrderController::class, 'show'])->name('orders.details');
     Route::get('/{poNumber}', [PurchaseOrderController::class, 'show'])->name('details');
     Route::get('/{id}/edit', [PurchaseOrderController::class, 'edit'])->name('edit');
     

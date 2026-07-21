@@ -1,5 +1,5 @@
 @extends('layouts.app')
-// legaspi 3:02pm
+
 @section('content')
 <!-- Logic para sa Consistent Status Color at Tracker[cite: 3] -->
 @php
@@ -71,7 +71,7 @@
             <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Supplier Information</h3>
                 <div class="text-sm text-gray-600 space-y-2">
-                    <p class="font-bold text-gray-800">Company Name: <span class="font-normal text-gray-500">{{ $po->supplier }}</span></p>
+                    <p class="font-bold text-gray-800">Company Name: <span class="font-normal text-gray-500">{{ $po->supplier->name ?? 'N/A' }}</span></p>
                     <p class="font-bold text-gray-800">Delivery Address: <span class="font-normal text-gray-500">{{ $po->delivery_address }}</span></p>
                     <p class="font-bold text-gray-800">Order Date: <span class="font-normal text-gray-500">{{ $po->created_at->format('M d, Y') }}</span></p>
                 </div>
