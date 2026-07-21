@@ -301,7 +301,7 @@ function openReceiptModal(id) {
 
     document.getElementById('receiptDetailsModal').classList.remove('hidden');
 
-    fetch('/receipt/' + id)
+    fetch('/receipts/' + id)
         .then(response => response.json())
         .then(data => {
 
@@ -349,6 +349,7 @@ function openReceiptModal(id) {
                     ${data.match_status ?? '-'}
                 </div>
 
+                
             </div>
 
             `;
@@ -385,7 +386,7 @@ function closeEditModal() {
 
 function openReceiptDetails(id) {
   document.getElementById('receiptDetailsModal').classList.remove('hidden');
-  fetch('/receipt/' + id)
+  fetch('/receipts/' + id)
     .then(response => response.json())
     .then(data => {
       document.getElementById('receiptDetailsContent').innerHTML = `

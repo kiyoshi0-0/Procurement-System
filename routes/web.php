@@ -141,12 +141,26 @@ Route::prefix('receipts')->name('receipts.')->group(function () {
 
 
 
+// Goods Receipt Routes (Naayos na at tinanggal ang duplicate)
+Route::prefix('receipts')->name('receipts.')->group(function () {
+    Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
+    Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
+    Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
+    Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
+    Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
+    
+    Route::get('/{id}/edit', [GoodsReceiptController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [GoodsReceiptController::class, 'update'])->name('update');
+    
+    // Naka-ayos na para sumalo sa /receipts/{id} fetch request ng frontend modal mo
+    Route::get('/{id}', [GoodsReceiptController::class, 'show'])->name('view');
+});
+
+// Export Routes
 Route::get('/export-goods-receipts', function () {
     return Excel::download(new GoodsReceiptsExport, 'goods-receipts.xlsx');
 })->name('export.excel');
 
 Route::get('/export-pdf', function () {
-    // Add your PDF logic here, or redirect for now
     return "PDF Export functionality coming soon!";
 })->name('export.pdf');
-    

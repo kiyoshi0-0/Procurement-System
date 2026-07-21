@@ -14,7 +14,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
         SupplierSeeder::class,
         ContractSeeder::class,
-        PurchaseRequestSeeder::class, // This will automatically trigger the model event above!
+        PurchaseRequestSeeder::class,
+        GoodsReceiptSeeder::class, // This will automatically trigger the model event above!
     ]);
 
         // Get all suppliers sorted by ID
