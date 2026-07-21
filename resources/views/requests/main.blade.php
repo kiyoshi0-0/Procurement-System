@@ -80,11 +80,26 @@
                 <input type="text" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"></i>
               </div>
-              <button class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
-                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
-                <span>Filter</span>
-              </button>
-              <button class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
+             <!-- Filter Dropdown Container -->
+              <div class="relative">
+                <button type="button" onclick="toggleFilterDropdown()" class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50 focus:outline-none">
+                  <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                  <span>Filter</span>
+                </button>
+                <div id="filter-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-20 text-xs">
+                  <div class="py-1">
+                    <button type="button" onclick="sortRequests('asc')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                      <i data-lucide="arrow-up-narrow-wide" class="w-3.5 h-3.5"></i>
+                      <span>ID: Ascending</span>
+                    </button>
+                    <button type="button" onclick="sortRequests('desc')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                      <i data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5"></i>
+                      <span>ID: Descending</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" onclick="exportTableToCSV('purchase_requests.csv')" class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span>Export</span>
               </button>
@@ -814,6 +829,84 @@ fetch(`/requests/${activeRequestId}/update-status`, {
         const pendingCount = document.querySelectorAll('#request-table-rows tr[data-status="pending"]').length;
         counterEl.innerText = pendingCount;
       }
+    }
+
+    //filter
+    function toggleFilterDropdown() {
+      const dropdown = document.getElementById('filter-dropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    function sortRequests(order) {
+      const tbody = document.getElementById('request-table-rows');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.sort((a, b) => {
+        // Extract ID numbers from 'REQ-XX' format for accurate numerical sorting
+        const idA = parseInt(a.id.replace('row-req-', ''));
+        const idB = parseInt(b.id.replace('row-req-', ''));
+
+        if (order === 'asc') {
+          return idA - idB;
+        } else {
+          return idB - idA;
+        }
+      });
+
+      // Re-append sorted rows to the table body
+      rows.forEach(row => tbody.appendChild(row));
+      
+      // Hide dropdown after clicking
+      toggleFilterDropdown();
+    }
+
+    // Optional: Close filter dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('filter-dropdown');
+      const filterBtn = dropdown.previousElementSibling;
+      if (!dropdown.contains(e.target) && !filterBtn.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    //export
+    function exportTableToCSV(filename) {
+      const csv = [];
+      const rows = document.querySelectorAll("#request-table-rows tr");
+      
+      // Get table headers dynamically for the CSV header row
+      const headers = [];
+      document.querySelectorAll("table thead th").forEach(th => {
+        // Exclude the 'Actions' column from export headers
+        if (th.innerText.trim() !== "Actions") {
+          headers.push('"' + th.innerText.trim() + '"');
+        }
+      });
+      csv.push(headers.join(","));
+
+      // Loop through each table row and extract text content
+      rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        const rowData = [];
+        
+        // Loop through columns except the last one (Actions column)
+        for (let i = 0; i < cols.length - 1; i++) {
+          // Clean up text content (replace line breaks and quotes)
+          let data = cols[i].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+          rowData.push('"' + data + '"');
+        }
+        csv.push(rowData.join(","));
+      });
+
+      // Download the generated CSV file
+      const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const downloadLink = document.createElement("a");
+      downloadLink.download = filename;
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+      downloadLink.style.display = "none";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
   </script>
   <script>lucide.createIcons();</script>
