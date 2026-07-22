@@ -221,8 +221,11 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS CDN (Loaded First) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN (Loaded Second) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         tailwind.config = {
@@ -242,6 +245,8 @@
                             cardPeach: '#FCE2D6',
                             actionBlue: '#A2C2E8',
                             actionBlueHover: '#8EB5E0',
+                            actionSlate: '#B5C4D4',
+                            actionSlateHover: '#9FAFC0'
                         },
                         chart: {
                             delivered: '#727CA3',
@@ -252,6 +257,36 @@
                 }
             }
         }
+
+        // Toggle Global Layout Profile UI Window Box Dropdowns
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            const arrow = document.getElementById('profileArrow');
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                if (arrow) arrow.classList.add('rotate-180');
+            } else {
+                dropdown.classList.add('hidden');
+                if (arrow) arrow.classList.remove('rotate-180');
+            }
+        }
+
+        // Toggle Sidebar Dropdowns
+        function toggleSubmenu(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside window space bounds
+        window.addEventListener('click', function (e) {
+            const container = document.getElementById('profileDropdownContainer');
+            const dropdown = document.getElementById('profileDropdown');
+            const arrow = document.getElementById('profileArrow');
+            if (container && !container.contains(e.target)) {
+                dropdown.classList.add('hidden');
+                if (arrow) arrow.classList.remove('rotate-180');
+            }
+        });
 
         // Initialize Purchase Request Trend Line Chart Graphic Elements
         const ctxTrend = document.getElementById('trendChart').getContext('2d');
@@ -282,18 +317,14 @@
             }
         });
 
-        // Initialize Dynamic Pie Chart
+        // Initialize Purchase Order Status Pie Chart Graphic Elements
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         new Chart(ctxStatus, {
             type: 'pie',
             data: {
                 labels: ['Delivered', 'Pending', 'Cancelled'],
                 datasets: [{
-                    data: [
-                        {{ $chartData['delivered'] }},
-                        {{ $chartData['pending'] }},
-                        {{ $chartData['cancelled'] }}
-                    ],
+                    data: [71.43, 20.41, 8.16],
                     backgroundColor: ['#727CA3', '#AAB06C', '#B44A4A'],
                     borderWidth: 0
                 }]

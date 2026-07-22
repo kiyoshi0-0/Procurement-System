@@ -287,16 +287,17 @@
         </div>
     </div>
 
-    <div class="pt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="pt-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        <!-- Category Spend (Text Centered Perfectly) -->
+        <!-- Category Spend (Text Centered Perfectly - Now Wider) -->
         <div
-            class="bg-white rounded-3xl p-8 border border-slate-100 shadow-md flex flex-col justify-between h-90 relative">
+            class="lg:col-span-5 bg-white rounded-3xl p-8 border border-slate-100 shadow-md flex flex-col justify-between h-90 relative">
             <div>
                 <h3 class="font-bold text-slate-800 text-lg">Spending by Category</h3>
                 <p class="text-xs text-slate-400 font-medium">Categorized inventory costs distribution</p>
             </div>
             <div class="relative flex-1 flex items-center justify-center max-h-55">
+
                 <canvas id="categoryDoughnutChart" class="max-h-47.5"></canvas>
                 <!-- PERFECTLY BALANCED AND CENTERED ABSOLUTE CONTAINER -->
                 <div
@@ -309,7 +310,7 @@
 
         <!-- Supplier Spend (Horizontal Bar Graph) -->
         <div
-            class="lg:col-span-2 bg-white rounded-3xl p-8 border border-slate-100 shadow-md flex flex-col justify-between h-90">
+            class="lg:col-span-7 bg-white rounded-3xl p-8 border border-slate-100 shadow-md flex flex-col justify-between h-90">
             <div>
                 <h3 class="font-bold text-slate-800 text-lg">Spending by Supplier</h3>
                 <p class="text-xs text-slate-400 font-medium">Fulfillment capital shares per vendor</p>
@@ -320,7 +321,6 @@
         </div>
 
     </div>
-
 
     <!-- mt-8 adds margin-top, which pushes the entire box away from the element above it -->
     <div class="mt-10 bg-white rounded-3xl p-8 border border-slate-100 shadow-md space-y-6">
@@ -656,12 +656,12 @@
 
             < style >
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-            body { font - family: 'Inter', sans - serif; }
-            /* Custom scrollbar to match sleek UI look */
-            :: -webkit - scrollbar { width: 6px; height: 6px; }
-            :: -webkit - scrollbar - track { background: #DBDBDB; }
-            :: -webkit - scrollbar - thumb { background: #A5A5A5; border - radius: 3px; }
-        </style >
+                body { font - family: 'Inter', sans - serif; }
+                /* Custom scrollbar to match sleek UI look */
+                :: -webkit - scrollbar { width: 6px; height: 6px; }
+                :: -webkit - scrollbar - track { background: #DBDBDB; }
+                :: -webkit - scrollbar - thumb { background: #A5A5A5; border - radius: 3px; }
+            </style >
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
