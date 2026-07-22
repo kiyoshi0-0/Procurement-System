@@ -13,9 +13,8 @@ class GoodsReceiptController extends Controller
     {
         $receipts = Receipt::latest()->get();
 
-        $shipmentsPending = Receipt::where('status', 'Pending')->count();
-
-        $approvedCount = Receipt::where('status', 'Approved')->count();
+        $shipmentsPending = Receipt::where('inspection_status', 'Pending')->count();
+        $approvedCount = Receipt::where('inspection_status', 'Approved')->count();
 
         $discrepanciesCount = Receipt::whereIn('match_status', [
             'QTY MISMATCH',
@@ -32,7 +31,7 @@ class GoodsReceiptController extends Controller
 
         $matchedCount = Receipt::where('match_status', 'MATCHED')->count();
 
-        $readyFinance = Receipt::where('status', 'Approved')->count();
+        $readyFinance = Receipt::where('inspection_status', 'Approved')->count();
 
 
         return view('receipts.goodreceipt', compact(
@@ -51,18 +50,16 @@ class GoodsReceiptController extends Controller
 
 
     public function approve($id)
-    {
-        $receipt = Receipt::findOrFail($id);
+{
+    $receipt = Receipt::findOrFail($id);
+    
+    $receipt->inspection_status = 'Approved';
+    $receipt->match_status = 'MATCHED';
+    $receipt->approved_at = now();
+    $receipt->save();
 
-        $receipt->status = 'Approved';
-        $receipt->match_status = 'MATCHED';
-        $receipt->approved_at = now();
-
-        $receipt->save();
-
-        return redirect()->back()
-            ->with('success','Receipt approved successfully.');
-    }
+    return redirect()->route('receipts.index')->with('success', 'Receipt approved successfully!');
+}
 
 
     public function edit($id)

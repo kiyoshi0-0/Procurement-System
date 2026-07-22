@@ -118,9 +118,7 @@ Route::prefix('receipts')->name('receipts.')->group(function () {
         ->name('payment');
 
 
-    Route::put('/{id}/approve',
-        [GoodsReceiptController::class, 'approve'])
-        ->name('approve');
+    Route::put('/receipts/{receipt}/approve', [GoodsReceiptController::class, 'approve'])->name('receipts.approve');
 
 
     Route::get('/{id}/edit',
