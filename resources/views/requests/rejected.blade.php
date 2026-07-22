@@ -68,19 +68,35 @@
           </button>
         </div>
 
+       <!-- Dynamic Loop Rows Content Section -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-200">
-            <h3 class="text-lg font-bold text-[#1E3A8A]">Approved Request History</h3>
+            <h3 class="text-lg font-bold text-[#1E3A8A]">Rejected History</h3>
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <div class="relative w-full sm:w-64">
                 <input type="text" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"></i>
               </div>
-              <button class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
-                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
-                <span>Filter</span>
-              </button>
-              <button class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
+             <!-- Filter Dropdown Container -->
+              <div class="relative">
+                <button type="button" onclick="toggleFilterDropdown()" class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50 focus:outline-none">
+                  <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                  <span>Filter</span>
+                </button>
+                <div id="filter-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-20 text-xs">
+                  <div class="py-1">
+                    <button type="button" onclick="sortRequests('asc')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                      <i data-lucide="arrow-up-narrow-wide" class="w-3.5 h-3.5"></i>
+                      <span>ID: Ascending</span>
+                    </button>
+                    <button type="button" onclick="sortRequests('desc')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                      <i data-lucide="arrow-down-wide-narrow" class="w-3.5 h-3.5"></i>
+                      <span>ID: Descending</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" onclick="exportTableToCSV('purchase_requests.csv')" class="flex items-center space-x-1.5 border border-gray-300 rounded-md px-3 py-1.5 text-xs text-gray-600 bg-white hover:bg-gray-50">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span>Export</span>
               </button>
@@ -167,6 +183,8 @@
     </div>
   </div>
 
+
+  
   <div id="sideDrawer" class="fixed inset-0 z-50 justify-end hidden">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity" onclick="closeDrawer()"></div>
     
@@ -331,6 +349,164 @@
       drawer.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
     }
+
+
+
+
+
+
+     function prepareAndOpenDrawer(buttonElement) {
+      try {
+        const reqData = buttonElement.getAttribute('data-request');
+        if (!reqData) return;
+        
+        const req = JSON.parse(reqData);
+        activeRequestId = req.id;
+        
+        document.getElementById('drawer-req-id').innerText = 'REQ-' + req.id;
+        document.getElementById('drawer-item-name').innerText = req.item_name || 'Purchase Request';
+        document.getElementById('drawer-meta-subtext').innerText = `${req.requestor} · ${req.dept} · ${req.supplier}`;
+        
+        document.getElementById('drawer-justification').innerText = req.justification || 'No justification details recorded.';
+        document.getElementById('box-items').innerText = req.items_count || 1;
+        document.getElementById('box-qty').innerText = req.qty || 1;
+        document.getElementById('box-total').innerText = parseFloat(req.total_estimated).toFixed(2);
+        document.getElementById('box-submitted').innerText = req.created_at;
+        document.getElementById('box-delivery').innerText = req.estimated_delivery;
+        document.getElementById('item-title-bold').innerText = req.item_name;
+        document.getElementById('item-sub-brand').innerText = req.supplier;
+        document.getElementById('item-price-bold').innerText = '$' + parseFloat(req.item_price).toLocaleString(undefined, {minimumFractionDigits:2});
+        document.getElementById('item-calc-qty').innerText = `${req.qty} × $` + parseFloat(req.item_price).toLocaleString(undefined, {minimumFractionDigits:2});
+        document.getElementById('item-grand-total').innerText = '$' + parseFloat(req.total_estimated).toLocaleString(undefined, {minimumFractionDigits:2});
+
+        const filesContainer = document.getElementById('drawer-files-container');
+        const noDocsMsg = document.getElementById('no-docs-msg');
+        filesContainer.innerHTML = '';
+        let docsArray = Array.isArray(req.supporting_docs) ? req.supporting_docs : [];
+        if (docsArray.length > 0) {
+          noDocsMsg.classList.add('hidden');
+          docsArray.forEach((docPath) => {
+            const fileName = docPath.split('/').pop();
+            const fileRow = document.createElement('div');
+            fileRow.className = "border border-gray-200 rounded-lg p-2 flex items-center justify-between bg-gray-50 text-[11px]";
+            fileRow.innerHTML = `
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-file-invoice text-blue-500"></i>
+                <span class="font-medium text-gray-700 truncate max-w-[220px]">${fileName}</span>
+              </div>
+              <a href="/storage/${docPath}" target="_blank" class="text-blue-600 hover:underline font-bold">View</a>`;
+            filesContainer.appendChild(fileRow);
+          });
+        } else {
+          noDocsMsg.classList.remove('hidden');
+        }
+
+        const currentPrio = (req.priority || 'low').toLowerCase();
+        const prioPill = document.getElementById('drawer-priority-pill');
+        prioPill.innerText = req.priority || 'Low';
+        if(currentPrio === 'high') {
+          prioPill.className = "px-2 py-0.5 rounded text-[10px] font-bold border bg-red-50 border-red-200 text-red-500";
+        } else if(currentPrio === 'medium') {
+          prioPill.className = "px-2 py-0.5 rounded text-[10px] font-bold border bg-amber-50 border-amber-200 text-amber-500";
+        } else {
+          prioPill.className = "px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-200 text-slate-500";
+        }
+
+        selectDecision(req.status.toLowerCase() === 'pending' ? 'approved' : req.status.toLowerCase());
+        document.getElementById('decision-comment').value = '';
+        
+        document.getElementById('drawerBackdrop').classList.remove('hidden');
+        setTimeout(() => {
+          document.getElementById('detailsDrawer').classList.remove('translate-x-full');
+        }, 20);
+      } catch(err) {
+        console.error("Data processing layout sequence fault: ", err);
+      }
+    }
+
+
+
+
+
+
+    //filter
+    function toggleFilterDropdown() {
+      const dropdown = document.getElementById('filter-dropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    function sortRequests(order) {
+      const tbody = document.getElementById('request-table-rows');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.sort((a, b) => {
+        // Extract ID numbers from 'REQ-XX' format for accurate numerical sorting
+        const idA = parseInt(a.id.replace('row-req-', ''));
+        const idB = parseInt(b.id.replace('row-req-', ''));
+
+        if (order === 'asc') {
+          return idA - idB;
+        } else {
+          return idB - idA;
+        }
+      });
+
+      // Re-append sorted rows to the table body
+      rows.forEach(row => tbody.appendChild(row));
+      
+      // Hide dropdown after clicking
+      toggleFilterDropdown();
+    }
+
+    // Optional: Close filter dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('filter-dropdown');
+      const filterBtn = dropdown.previousElementSibling;
+      if (!dropdown.contains(e.target) && !filterBtn.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    //export
+    function exportTableToCSV(filename) {
+      const csv = [];
+      const rows = document.querySelectorAll("#request-table-rows tr");
+      
+      // Get table headers dynamically for the CSV header row
+      const headers = [];
+      document.querySelectorAll("table thead th").forEach(th => {
+        // Exclude the 'Actions' column from export headers
+        if (th.innerText.trim() !== "Actions") {
+          headers.push('"' + th.innerText.trim() + '"');
+        }
+      });
+      csv.push(headers.join(","));
+
+      // Loop through each table row and extract text content
+      rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        const rowData = [];
+        
+        // Loop through columns except the last one (Actions column)
+        for (let i = 0; i < cols.length - 1; i++) {
+          // Clean up text content (replace line breaks and quotes)
+          let data = cols[i].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+          rowData.push('"' + data + '"');
+        }
+        csv.push(rowData.join(","));
+      });
+
+      // Download the generated CSV file
+      const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const downloadLink = document.createElement("a");
+      downloadLink.download = filename;
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+      downloadLink.style.display = "none";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
