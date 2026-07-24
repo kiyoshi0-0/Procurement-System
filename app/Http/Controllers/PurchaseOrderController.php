@@ -41,6 +41,7 @@ class PurchaseOrderController extends Controller
             'items.*.price' => 'required|numeric|min:0',
         ]);
 
+        // 1. Create the parent Purchase Order header record[cite: 5]
         $purchaseOrder = PurchaseOrder::create([
             'po_number' => $validated['po_number'],
             'date' => $validated['date'],
@@ -49,15 +50,19 @@ class PurchaseOrderController extends Controller
             'delivery_address' => $validated['delivery_address'],
         ]);
 
+        // 2. Save each line item directly into your flat purchases table using the Purchase model[cite: 3]
         foreach ($validated['items'] as $item) {
-            $purchaseOrder->items()->create([
-                'name' => $item['name'],
-                'qty' => $item['qty'],
-                'price' => $item['price'],
+            \App\Models\Purchase::create([
+                'po_number' => $validated['po_number'],
+                'supplier_id' => $validated['supplier_id'],
+                'item_name' => $item['name'],          // Matches Purchase model[cite: 3]
+                'quantity' => $item['qty'],             // Matches Purchase model[cite: 3]
+                'total_price' => $item['qty'] * $item['price'], // Matches Purchase model[cite: 3]
+                'status' => $validated['status'] ?? 'Confirmed',
             ]);
         }
 
-        // Log the creation activity
+        // Log the creation activity[cite: 5]
         ActivityLog::create([
             'po_number' => $validated['po_number'],
             'activity' => 'Created',

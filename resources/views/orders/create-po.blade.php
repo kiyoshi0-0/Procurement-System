@@ -62,7 +62,7 @@
                         </button>
                     </div>
                     
-                    <div id="itemsContainer" class="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                    <div id="itemsContainer" class="space-y-4 max-h-100 overflow-y-auto pr-1">
                         <!-- Default Row -->
                         <div class="item-row bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3 relative group">
                             <div class="flex items-center justify-between">

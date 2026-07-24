@@ -1,126 +1,159 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Logic para sa Consistent Status Color at Tracker[cite: 3] -->
 @php
-    $statusColor = 'bg-red-100 text-red-600';
-    $progressWidth = '0%';
-    $step1Color = $step2Color = $step3Color = $step4Color = 'bg-gray-300';
+    $statusKey = ucfirst(strtolower($po->status));
+    
+    $statusColor = match($statusKey) {
+        'Delivered' => 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+        'Sent' => 'bg-blue-50 text-blue-700 border border-blue-200/60',
+        'Confirmed' => 'bg-amber-50 text-amber-700 border border-amber-200/60',
+        default => 'bg-rose-50 text-rose-700 border border-rose-200/60',
+    };
 
-    if ($po->status === 'Delivered') {
-        $statusColor = 'bg-green-100 text-green-700';
-        $progressWidth = '100%';
-        $step1Color = $step2Color = $step3Color = $step4Color = 'bg-emerald-500';
-    } elseif ($po->status === 'Confirmed') {
-        $statusColor = 'bg-orange-100 text-orange-700';
-        $progressWidth = '66%';
-        $step1Color = $step2Color = $step3Color = 'bg-emerald-500';
-    } elseif ($po->status === 'Sent') {
-        $statusColor = 'bg-blue-100 text-blue-700';
-        $progressWidth = '33%';
-        $step1Color = $step2Color = 'bg-emerald-500';
-    }
+    $dotColor = match($statusKey) {
+        'Delivered' => 'bg-emerald-500',
+        'Sent' => 'bg-blue-500',
+        'Confirmed' => 'bg-amber-500',
+        default => 'bg-rose-500',
+    };
+
+    $progressWidth = match($statusKey) {
+        'Delivered' => '100%',
+        'Confirmed' => '66%',
+        'Sent' => '33%',
+        default => '0%',
+    };
 @endphp
 
-<section id="po-details-view" class="view-panel space-y-6 max-w-[95%] w-full mx-auto p-6">
+<section id="po-details-view" class="view-panel space-y-6 max-w-[98%] w-full mx-auto p-4 md:p-6">
     <!-- Header Section -->
-    <div>
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Purchase Order Details</h1>
-        <nav class="text-sm text-gray-400 mt-1">Dashboard > Orders > <span class="text-gray-700 font-semibold">{{ $po->po_number }}</span></nav>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Purchase Order Details</h1>
+            <nav class="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
+                <span>Dashboard</span>
+                <span>/</span>
+                <span>Orders</span>
+                <span>/</span>
+                <span class="text-gray-700 font-semibold">{{ $po->po_number }}</span>
+            </nav>
+        </div>
     </div>
 
     <!-- Enhanced Tracking Timeline -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-8">
         <!-- Status & Title -->
-        <div class="shrink-0 space-y-2">
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-bold text-gray-800">PO # {{ $po->po_number }}</span>
-                <span class="{{ $statusColor }} text-xs px-4 py-1 rounded-full font-bold uppercase">{{ $po->status }}</span>
+        <div class="shrink-0 space-y-2 text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-3">
+                <span class="text-xs font-bold text-gray-500">PO # {{ $po->po_number }}</span>
+                <span class="{{ $statusColor }} text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
+                    {{ $po->status }}
+                </span>
             </div>
-            <h2 class="text-2xl font-black text-gray-900">{{ $po->po_number }}</h2>
+            <h2 class="text-xl font-bold text-gray-900 tracking-tight">{{ $po->po_number }}</h2>
         </div>
         
         <!-- Timeline: Extended and Larger Shapes -->
-        <div class="flex-1 w-full max-w-2xl mx-auto relative px-4">
+        <div class="flex-1 w-full max-w-xl mx-auto relative px-4">
             <!-- Progress Line Background -->
-            <div class="absolute left-10 right-10 top-4 h-1.5 bg-gray-200"></div>
+            <div class="absolute left-6 right-6 top-3.5 h-1 bg-gray-100 rounded-full"></div>
             <!-- Active Progress Line -->
-            <div class="absolute left-10 top-4 h-1.5 bg-emerald-500 transition-all duration-500" style="width: {{ $progressWidth }};"></div>
+            <div class="absolute left-6 top-3.5 h-1 bg-emerald-500 rounded-full transition-all duration-500" style="width: {{ $progressWidth }};"></div>
             
             <!-- Steps Container -->
             <div class="flex justify-between relative z-10 w-full">
-                @foreach(['Timeline', 'Add Items', 'Add Documents', 'Review & Send'] as $step)
+                @foreach(['Timeline', 'Add Items', 'Add Documents', 'Review & Send'] as $index => $step)
+                    @php
+                        $isCompleted = match($statusKey) {
+                            'Delivered' => true,
+                            'Confirmed' => $index <= 2,
+                            'Sent' => $index <= 1,
+                            default => $index === 0,
+                        };
+                    @endphp
                     <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full border-4 border-white shadow-sm {{ 
-                            ($step === 'Timeline') || 
-                            ($step === 'Add Items' && ($progressWidth === '66%' || $progressWidth === '100%')) ||
-                            ($step === 'Add Documents' && ($progressWidth === '66%' || $progressWidth === '100%')) ||
-                            ($step === 'Review & Send' && $progressWidth === '100%') 
-                            ? 'bg-emerald-500' : 'bg-gray-300' 
-                        }}"></div>
-                        <span class="text-xs font-bold text-gray-500 mt-3 whitespace-nowrap">{{ $step }}</span>
+                        <div class="w-7 h-7 rounded-full border-2 border-white shadow-xs flex items-center justify-center text-[10px] font-bold transition-all {{ $isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500' }}">
+                            @if($isCompleted) ✓ @else {{ $index + 1 }} @endif
+                        </div>
+                        <span class="text-[11px] font-semibold text-gray-500 mt-2.5 whitespace-nowrap">{{ $step }}</span>
                     </div>
                 @endforeach
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <!-- Main Content -->
-        <div class="lg:col-span-9 space-y-8">
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Supplier Information</h3>
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p class="font-bold text-gray-800">Company Name: <span class="font-normal text-gray-500">{{ $po->supplier->name ?? 'N/A' }}</span></p>
-                    <p class="font-bold text-gray-800">Delivery Address: <span class="font-normal text-gray-500">{{ $po->delivery_address }}</span></p>
-                    <p class="font-bold text-gray-800">Order Date: <span class="font-normal text-gray-500">{{ $po->created_at->format('M d, Y') }}</span></p>
+        <div class="lg:col-span-9 space-y-6">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-xs space-y-4">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Supplier Information</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100">
+                        <span class="font-semibold text-gray-400 block mb-1">Company Name</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ $po->supplier->name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100">
+                        <span class="font-semibold text-gray-400 block mb-1">Delivery Address</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ $po->delivery_address }}</span>
+                    </div>
+                    <div class="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100">
+                        <span class="font-semibold text-gray-400 block mb-1">Order Date</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ $po->created_at?->format('M d, Y') }}</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Items Table -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 space-y-6">
-                <h3 class="text-lg font-bold text-gray-900">Itemized Purchase List</h3>
-                <table class="w-full text-left text-sm border-separate border-spacing-y-3">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-700 font-bold">
-                            <th class="p-4 rounded-l-xl">Item</th>
-                            <th class="p-4 text-center">Quantity</th>
-                            <th class="p-4 text-center">Unit Price</th>
-                            <th class="p-4 text-center rounded-r-xl">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="font-semibold text-gray-800">
-                        @foreach($po->items as $item)
-                        <tr class="bg-gray-50 rounded-xl">
-                            <td class="p-4">{{ $item->name }}</td>
-                            <td class="p-4 text-center">{{ $item->qty }}</td>
-                            <td class="p-4 text-center">₱{{ number_format($item->price, 2) }}</td>
-                            <td class="p-4 text-center font-bold">₱{{ number_format($item->qty * $item->price, 2) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <div class="text-right text-sm font-extrabold text-gray-900 pt-4 border-t border-dashed">
-                    Grand Total: ₱{{ number_format($po->items->sum(fn($i) => $i->qty * $i->price), 2) }}
+            <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 space-y-5">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Itemized Purchase List</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-100">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/80 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-100">
+                                <th class="py-3.5 px-4">Item</th>
+                                <th class="py-3.5 px-4 text-center">Quantity</th>
+                                <th class="py-3.5 px-4 text-center">Unit Price</th>
+                                <th class="py-3.5 px-4 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-gray-700 font-medium">
+                            @foreach($po->items as $item)
+                            <tr class="hover:bg-gray-50/60 transition">
+                                <td class="py-4 px-4 font-semibold text-gray-900">{{ $item->name }}</td>
+                                <td class="py-4 px-4 text-center text-gray-600">{{ $item->qty }}</td>
+                                <td class="py-4 px-4 text-center text-gray-600">₱{{ number_format($item->price, 2) }}</td>
+                                <td class="py-4 px-4 text-right font-bold text-gray-900">₱{{ number_format($item->qty * $item->price, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end pt-2">
+                    <div class="bg-gray-50/80 px-5 py-3 rounded-xl border border-gray-100 text-right">
+                        <span class="text-xs text-gray-500 font-semibold mr-3">Grand Total:</span>
+                        <span class="text-sm font-extrabold text-gray-900">₱{{ number_format($po->items->sum(fn($i) => $i->qty * $i->price), 2) }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Matching Cards Section[cite: 3] -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 space-y-4">
+            <!-- Matching Cards Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 space-y-3">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-md font-bold text-gray-900">Match Invoice</h3>
-                        <span class="bg-green-100 text-green-700 text-xs px-4 py-1 rounded-full font-bold uppercase">Matched</span>
+                        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Match Invoice</h3>
+                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wide">Matched</span>
                     </div>
-                    <p class="text-sm text-green-600 font-bold flex items-center gap-2">✓ Match PO's as delivered</p>
+                    <p class="text-xs text-emerald-600 font-semibold flex items-center gap-2">✓ Match PO's as delivered</p>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 space-y-4">
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 space-y-3">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-md font-bold text-gray-900">Match Delivery Receipt</h3>
-                        <span class="bg-green-100 text-green-700 text-xs px-4 py-1 rounded-full font-bold uppercase">Matched</span>
+                        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Match Delivery Receipt</h3>
+                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wide">Matched</span>
                     </div>
-                    <div class="text-sm text-green-600 font-bold space-y-2">
+                    <div class="text-xs text-emerald-600 font-semibold space-y-1">
                         <p class="flex items-center gap-2">✓ Match Invoice</p>
                         <p class="flex items-center gap-2">✓ Match Delivery Receipt</p>
                     </div>
@@ -130,13 +163,13 @@
 
         <!-- Sidebar Actions -->
         <div class="lg:col-span-3 space-y-6">
-            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 text-md font-bold text-center">
-                <a href="#" class="block w-full bg-emerald-500 text-white py-4 rounded-xl hover:bg-emerald-600 transition">Send to Supplier</a>
-                <a href="{{ route('orders.details', $po->po_number) }}" class="block w-full bg-white border border-gray-200 text-gray-700 py-4 rounded-xl hover:bg-gray-50 transition">Re-print</a>
-                <a href="{{ route('orders.edit', $po->id) }}" class="block w-full bg-white border border-gray-200 text-gray-700 py-4 rounded-xl hover:bg-gray-50 transition">Revise</a>
-                <form action="{{ route('orders.cancel', $po->id) }}" method="POST">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs space-y-2.5">
+                <a href="#" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Send to Supplier</a>
+                <a href="{{ route('orders.details', $po->po_number) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Re-print</a>
+                <a href="{{ route('orders.edit', $po->id) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Revise</a>
+                <form action="{{ route('orders.cancel', $po->id) }}" method="POST" class="pt-1">
                     @csrf
-                    <button type="submit" class="block w-full bg-white border border-red-200 text-red-500 py-4 rounded-xl hover:bg-red-50 transition">Cancel Order</button>
+                    <button type="submit" class="w-full bg-white hover:bg-rose-50 text-rose-600 border border-rose-200/80 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center cursor-pointer">Cancel Order</button>
                 </form>
             </div>
         </div>
