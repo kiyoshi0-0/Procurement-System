@@ -134,7 +134,7 @@ class SupplierFactory extends Factory
             'address' => $this->faker->address,
             'payment_terms' => $this->faker->randomElement(['Net 30', 'Net 60', 'COD']),
             'delivery_schedule' => $this->faker->randomElement(['Weekly', 'Bi-Weekly', 'Monthly']),
-            'rating' => $this->faker->randomFloat(1, 4.0, 5.0),
+            'rating' => fake()->randomFloat(1, 1, 5),
         ];
     }
 }
