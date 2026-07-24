@@ -3,53 +3,15 @@
 @section('content')
 <div class="space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Record New Purchase</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Add New Supplier</h1>
+        <div class="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+            <span>Dashboard</span>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <span>Supplier Management</span>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <span class="text-gray-800 font-medium">Add Supplier</span>
+        </div>
     </div>
-
-    <form action="{{ route('suppliers.store') }}" method="POST" class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs space-y-4">
-        @csrf
-
-        <!-- Supplier Dropdown (Dynamic) -->
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Select Supplier *</label>
-            <select name="supplier_id" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500" required>
-                <option value="">-- Choose a Supplier --</option>
-                @foreach(\App\Models\Supplier::all() as $supplier)
-                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Purchase Fields -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Item Name *</label>
-                <input type="text" name="item_name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">PO Number *</label>
-                <input type="text" name="po_number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Quantity *</label>
-                <input type="number" name="quantity" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Total Price *</label>
-                <input type="number" step="0.01" name="total_price" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-            </div>
-        </div>
-
-        <div class="pt-4">
-            <button type="submit" class="px-6 py-2 bg-emerald-500 text-white rounded-lg font-medium text-sm hover:bg-emerald-600 transition">
-                Save Purchase Record
-            </button>
-        </div>
-    </form>
-</div>
 
     <!-- Error Summary Alert Block -->
     @if($errors->any())

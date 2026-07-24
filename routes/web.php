@@ -58,6 +58,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     // Standardized routes to match your sidebar calls
     Route::get('/', [PurchaseOrderController::class, 'list'])->name('list');
     Route::get('/create', [PurchaseOrderController::class, 'create'])->name('create');
+    Route::get('/orderhistory', [PurchaseOrderController::class, 'orderhistory'])->name('orderhistory');
     Route::get('/history', [PurchaseOrderController::class, 'history'])->name('history');
     
     Route::get('/orders/{po_number}', [PurchaseOrderController::class, 'show'])->name('orders.details');

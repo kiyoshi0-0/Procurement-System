@@ -157,10 +157,10 @@
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('suppliers.evaluation') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Supplier Evaluation</span>
                             </a>
-                            <a href="{{ route('suppliers.history') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('suppliers.history') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
+                            <!-- <a href="{{ route('suppliers.history') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('suppliers.history') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('suppliers.history') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Purchase History</span>
-                            </a>
+                            </a> -->
                             <a href="{{ route('suppliers.contracts') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('suppliers.contracts') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('suppliers.contracts') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Contracts</span>
@@ -187,6 +187,10 @@
                             <a href="{{ route('orders.create') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('orders.create') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.create') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Create/Edit PO</span>
+                            </a>
+                            <a href="{{ route('orders.orderhistory') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('orders.orderhistory') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
+                                <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.orderhistory') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
+                                <span>Purchase History</span>
                             </a>
                             <a href="{{ route('orders.history') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('orders.history') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.history') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>

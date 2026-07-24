@@ -25,19 +25,27 @@
         </div>
     </div>
 
-    <!-- METRICS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-bold text-gray-700">Total Active PO's</p>
-            <p id="metric-active" class="text-4xl font-extrabold text-gray-900 mt-2">0</p>
+    <!-- METRICS FOR ALL STATUSES -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Orders</p>
+            <p id="metric-total" class="text-3xl font-extrabold text-gray-900 mt-2">0</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-bold text-gray-700">Pending Sent</p>
-            <p id="metric-sent" class="text-4xl font-extrabold text-gray-900 mt-2">0</p>
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <p class="text-xs font-bold text-green-600 uppercase tracking-wider">Delivered</p>
+            <p id="metric-delivered" class="text-3xl font-extrabold text-green-700 mt-2">0</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <p class="text-xs font-bold text-gray-700">Requires Revision</p>
-            <p id="metric-revision" class="text-4xl font-extrabold text-gray-900 mt-2">0</p>
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">Sent</p>
+            <p id="metric-sent" class="text-3xl font-extrabold text-blue-700 mt-2">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <p class="text-xs font-bold text-orange-600 uppercase tracking-wider">Confirmed</p>
+            <p id="metric-confirmed" class="text-3xl font-extrabold text-orange-700 mt-2">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Cancelled</p>
+            <p id="metric-cancelled" class="text-3xl font-extrabold text-red-700 mt-2">0</p>
         </div>
     </div>
 
@@ -73,14 +81,14 @@
                     @forelse($purchaseOrders as $po)
                         @php
                             $total = $po->items->sum(fn($item) => $item->qty * $item->price);
-                            $statusColor = match($po->status) {
+                            $statusColor = match(ucfirst(strtolower($po->status))) {
                                 'Delivered' => 'bg-green-100 text-green-700',
                                 'Sent' => 'bg-blue-100 text-blue-700',
                                 'Confirmed' => 'bg-orange-100 text-orange-700',
                                 default => 'bg-red-100 text-red-600',
                             };
                         @endphp
-                        <tr data-status="{{ $po->status }}" class="po-table-row bg-gray-50 rounded-lg hover:bg-gray-100 transition shadow-sm">
+                        <tr data-status="{{ ucfirst(strtolower($po->status)) }}" class="po-table-row bg-gray-50 rounded-lg hover:bg-gray-100 transition shadow-sm">
                             <td class="p-4 rounded-l-lg font-bold text-gray-900 target-po">{{ $po->po_number }}</td>
                             <td class="p-4 target-date">{{ $po->created_at?->format('Y-m-d') }}</td>
                             <td class="p-4 target-supplier">{{ $po->supplier->name ?? 'No Supplier' }}</td>
@@ -126,8 +134,11 @@
     }
     function updateActiveMetricsCounter() { 
         const r = Object.values(purchaseOrdersState); 
-        document.getElementById('metric-active').innerText = r.filter(p => p.status !== 'Cancelled').length; 
-        document.getElementById('metric-sent').innerText = r.filter(p => p.status === 'Sent').length; 
+        document.getElementById('metric-total').innerText = r.length;
+        document.getElementById('metric-delivered').innerText = r.filter(p => p.status.toLowerCase() === 'delivered').length; 
+        document.getElementById('metric-sent').innerText = r.filter(p => p.status.toLowerCase() === 'sent').length; 
+        document.getElementById('metric-confirmed').innerText = r.filter(p => p.status.toLowerCase() === 'confirmed').length; 
+        document.getElementById('metric-cancelled').innerText = r.filter(p => p.status.toLowerCase() === 'cancelled').length; 
     }
     function viewPoDetails(n) { window.location.href = `/orders/${n}`; }
     const purchaseOrdersState = @json($purchaseOrders->keyBy('po_number'));

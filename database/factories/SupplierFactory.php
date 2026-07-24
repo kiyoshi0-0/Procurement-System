@@ -6,18 +6,19 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SupplierFactory extends Factory
 {
-    public function definition(): array
-    {
-        return [
-            'name' => fake()->company(),
-            'address' => fake()->address(),
-            'category' => fake()->randomElement(['Components', 'Storage', 'Graphics', 'Cooling']),
-            'contact_person' => fake()->name(),
-            'phone' => fake()->phoneNumber(),
-            'email' => fake()->safeEmail(),
-            'payment_terms' => 'Net 30',
-            'delivery_schedule' => 'Weekly',
-            'rating' => fake()->randomFloat(1, 1, 5),
-        ];
-    }
+    public function definition()
+{
+    return [
+        'name' => $this->faker->company,
+        'category' => $this->faker->randomElement(['Components', 'Graphics', 'Power Supply', 'Storage', 'Cooling']),
+        'sub_categories' => $this->faker->words(2, true),
+        'contact_person' => $this->faker->name,
+        'phone' => $this->faker->phoneNumber,
+        'email' => $this->faker->unique()->safeEmail,
+        'address' => $this->faker->address,
+        'payment_terms' => $this->faker->randomElement(['Net 30', 'Net 60', 'COD']),
+        'delivery_schedule' => $this->faker->randomElement(['Weekly', 'Bi-Weekly', 'Monthly']),
+        'rating' => $this->faker->randomFloat(1, 1.0, 5.0),
+    ];
+}
 }

@@ -6,6 +6,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use App\Models\Purchase;
 
 class PurchaseOrderController extends Controller
 {
@@ -144,6 +145,17 @@ class PurchaseOrderController extends Controller
         
         return view('orders.history', compact('activityLogs'));
     }
+
+    public function orderHistory()
+    {
+        // Sort by po_number ascending so it matches the request sequence (PO-2026-001, PO-2026-002, etc.)
+        $purchases = Purchase::with('supplier')
+            ->orderBy('po_number', 'asc')
+            ->get();
+
+        return view('orders.orderhistory', compact('purchases'));
+    }
+    
 
     public function destroy($id)
     {

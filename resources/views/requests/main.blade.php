@@ -107,7 +107,7 @@
           </div>
 
           <!-- Scrollable Table Container (Shows ~5 rows) -->
-          <div class="max-h-[320px] overflow-y-auto overflow-x-auto relative">
+          <div class="overflow-x-auto relative">
             <table class="w-full border-collapse text-left text-xs">
               <thead class="bg-gray-300 text-gray-700 uppercase font-semibold border-b border-gray-200 tracking-wider sticky top-0 z-10">
                 <tr>
