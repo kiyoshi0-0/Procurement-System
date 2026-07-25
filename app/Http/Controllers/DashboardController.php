@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use App\Models\Purchase;
@@ -16,11 +17,13 @@ class DashboardController extends Controller
         // 1. Metric Scorecard Totals
         $pendingRequestsCount = PurchaseRequest::whereRaw('LOWER(status) = ?', ['pending'])->count();
         $activeSuppliersCount = Supplier::count();
-        $purchaseOrdersCount  = Purchase::count();
-        $totalSpending        = Purchase::sum('total_price');
+        $purchaseOrdersCount  = PurchaseOrder::count();
+        $totalSpending        = PurchaseOrder::with('items')
+            ->get()
+            ->sum(fn($po) => $po->items->sum(fn($item) => $item->qty * $item->price));
 
         // 2. Latest Purchase Orders Table (Top 6 latest entries)
-        $latestOrders = Purchase::with('supplier')
+        $latestOrders = PurchaseOrder::with(['supplier', 'items'])
             ->latest()
             ->take(6)
             ->get();

@@ -153,7 +153,13 @@
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('suppliers.show') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Supplier Details</span>
                             </a>
-                            <a href="{{ isset($supplier) ? route('suppliers.evaluation', $supplier->id ?? $supplier['id']) : '#' }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('suppliers.evaluation') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
+                            @php
+                                $supplierId = isset($supplier) ? $supplier->id : null;
+                                $evaluationRoute = $supplierId ? route('suppliers.evaluation', $supplierId) : '#';
+                                $evaluationClass = $supplierId ? 'text-gray-500 hover:text-gray-800' : 'text-gray-400 cursor-not-allowed';
+                                $evaluationPointer = $supplierId ? '' : 'pointer-events-none';
+                            @endphp
+                            <a href="{{ $evaluationRoute }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('suppliers.evaluation') ? 'sub-active' : $evaluationClass }} {{ $evaluationPointer }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('suppliers.evaluation') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Supplier Evaluation</span>
                             </a>

@@ -132,7 +132,7 @@
         <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-100 lg:col-span-9 overflow-hidden">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-xl font-bold text-gray-900">Latest Purchase Orders</h3>
-                <a href="{{ route('suppliers.history') }}" class="text-xs font-bold text-gray-400 hover:text-brand-green transition-colors">view all</a>
+                <a href="{{ route('orders.list') }}" class="text-xs font-bold text-gray-400 hover:text-brand-green transition-colors">view all</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -147,13 +147,20 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50 text-xs font-medium text-gray-800">
                         @forelse($latestOrders as $order)
+                        @php
+                            $firstItem = $order->items->first();
+                            $itemLabel = $firstItem ? $firstItem->name : 'No items';
+                            $additionalCount = max(0, $order->items->count() - 1);
+                            $itemLabel = $additionalCount > 0 ? $itemLabel . ' + ' . $additionalCount . ' more' : $itemLabel;
+                            $orderTotal = $order->items->sum(fn($item) => $item->qty * $item->price);
+                        @endphp
                         <tr class="hover:bg-gray-50/80 transition-colors">
                             <td class="py-3 text-center font-medium">{{ $order->po_number }}</td>
                             <td class="py-3 pl-4 font-medium">
-                                <span class="font-bold text-gray-900 block">{{ $order->item_name }}</span>
+                                <span class="font-bold text-gray-900 block">{{ $itemLabel }}</span>
                                 <span class="text-xs text-gray-500">{{ $order->supplier->name ?? 'Unknown Supplier' }}</span>
                             </td>
-                            <td class="py-3 text-center font-medium">₱{{ number_format($order->total_price, 2) }}</td>
+                            <td class="py-3 text-center font-medium">₱{{ number_format($orderTotal, 2) }}</td>
                             <td class="py-3 text-center font-medium text-gray-900">
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded text-[10px] uppercase">
                                     {{ $order->status }}
@@ -173,16 +180,6 @@
 
         <!-- Vertical Module Actions Blocks -->
         <div class="lg:col-span-3 flex flex-col gap-5">
-            <a href="{{ route('orders.create') }}"
-                class="w-full bg-bg-actionBlue hover:bg-bg-actionBlueHover text-slate-900 font-bold py-4 px-5 rounded-2xl flex items-center space-x-4 transition-all transform active:scale-[0.99] shadow-sm group">
-                <div class="bg-white/40 p-2 rounded-xl text-slate-800 group-hover:scale-105 transition-transform">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                </div>
-                <span class="text-[17px] tracking-tight">Create Order</span>
-            </a>
 
             <a href="{{ route('suppliers.create') }}"
                 class="w-full bg-bg-actionBlue hover:bg-bg-actionBlueHover text-slate-900 font-bold py-4 px-5 rounded-2xl flex items-center space-x-4 transition-all transform active:scale-[0.99] shadow-sm group">

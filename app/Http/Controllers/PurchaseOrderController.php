@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Purchase;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
-use App\Models\Purchase;
 
 class PurchaseOrderController extends Controller
 {
@@ -161,12 +162,18 @@ class PurchaseOrderController extends Controller
 
     public function orderHistory()
     {
-        // Display actual purchase orders in history, not the separate purchases table.
-        $purchases = PurchaseOrder::with(['supplier', 'items'])
-            ->orderBy('po_number', 'asc')
-            ->get();
+        // Prefer flat Purchase history when available, otherwise fallback to PO item history.
+        if (Purchase::count() > 0) {
+            $historyItems = Purchase::with('supplier')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $historyItems = PurchaseOrderItem::with(['purchaseOrder.supplier'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
-        return view('orders.orderhistory', compact('purchases'));
+        return view('orders.orderhistory', compact('historyItems'));
     }
     
 
