@@ -2,24 +2,41 @@
 
 namespace Database\Factories;
 
+use App\Models\Receipt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ReceiptFactory extends Factory
 {
-    protected $model = \App\Models\Receipt::class;
+    protected $model = Receipt::class;
 
     public function definition(): array
     {
+        static $sequence = 1;
+        $poNumber = 'PO-' . str_pad($sequence++, 3, '0', STR_PAD_LEFT);
+
+        $poQty = $this->faker->numberBetween(20, 50);
+        
+        // Para magkaroon ng discrepancy (minsan kulang ang dine-deliver)
+        $hasDiscrepancy = $this->faker->boolean(30); // 30% chance na magka-issue
+        $grQty = $hasDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
+
         return [
-            'gr_number' => 'GR-' . $this->faker->unique()->numerify('2026-###'),
-            'po_number' => 'PO-' . $this->faker->numerify('2026-###'),
+            'gr_number' => 'GR-' . strtoupper($this->faker->bothify('#####')),
+            'po_number' => $poNumber,
             'supplier' => $this->faker->company(),
-            'item_name' => $this->faker->words(3, true),
-            'po_quantity' => $this->faker->numberBetween(1, 50),
-            'gr_quantity' => $this->faker->numberBetween(1, 50),
-            'warehouse' => 'Main Warehouse',
-            'inspection_status' => 'Passed',
-            'match_status' => $this->faker->randomElement(['QTY MISMATCH', 'PRICE MISMATCH', 'MATCHED']), // <-- Add this line
+            'item_name' => $this->faker->randomElement([
+                'Kingston Fury Beast 16GB DDR4 RAM',
+                'AMD Ryzen 5 5600X Processor',
+                'MSI B550M PRO-VDH WIFI Motherboard',
+                'Samsung 980 PRO 1TB NVMe SSD',
+                'NVIDIA GeForce RTX 4060 GPU'
+            ]),
+            'po_quantity' => $poQty,
+            'gr_quantity' => $grQty,
+            'warehouse' => $this->faker->randomElement(['Main Warehouse', 'North Depot', 'South Hub']),
+            'inspection_status' => $hasDiscrepancy ? 'Failed' : 'Passed',
+            'match_status' => $hasDiscrepancy ? 'Discrepancy Found' : 'Matched',
+            'approved_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ];
     }
 }

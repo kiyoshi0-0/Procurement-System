@@ -13,6 +13,7 @@ use App\Exports\GoodsReceiptsExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -96,6 +97,14 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/requests/revision', [PurchaseRequestController::class, 'showRevisionRequests'])->name('requests.revision');
     Route::get('/requests/pending', [PurchaseRequestController::class, 'showPendingRequests'])->name('requests.pending');
 
+// Halimbawa ng tamang Route para sa pag-update
+Route::put('/goods-receipt/{id}', [GoodsReceiptController::class, 'update']);
+  
+    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
+Route::post('/delivery-issues', [DeliveryIssueController::class, 'store'])->name('delivery-issues.store');
+// Route para sa Edit/Update modal
+Route::put('/delivery-issues/{id}', [DeliveryIssueController::class, 'update'])->name('delivery-issues.update');
+
 Route::prefix('receipts')->name('receipts.')->group(function () {
 
 
@@ -143,7 +152,7 @@ Route::prefix('receipts')->name('receipts.')->group(function () {
 // Goods Receipt Routes (Naayos na at tinanggal ang duplicate)
 Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
-    Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
+    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
     Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
     Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
     Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
@@ -160,6 +169,4 @@ Route::get('/export-goods-receipts', function () {
     return Excel::download(new GoodsReceiptsExport, 'goods-receipts.xlsx');
 })->name('export.excel');
 
-Route::get('/export-pdf', function () {
-    return "PDF Export functionality coming soon!";
-})->name('export.pdf');
+Route::get('/export-pdf', [GoodsReceiptController::class, 'exportPdf'])->name('export.pdf');
