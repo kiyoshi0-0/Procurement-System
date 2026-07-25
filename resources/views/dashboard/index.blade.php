@@ -62,10 +62,10 @@
                 </svg>
             </div>
             <div class="flex flex-col justify-start pt-1.5 leading-none">
-                <span class="text-[15px] font-extrabold text-[#0F172A] tracking-tight">Total Spending</span>
-                <div class="flex items-baseline space-x-1.5 mt-1">
-                    <span class="text-[20px] font-black text-[#0F172A] tracking-tight uppercase">PHP</span>
-                    <span class="text-[20px] font-black text-[#0F172A] tracking-tight">{{ number_format($totalSpending, 2) }}</span>
+                <span class="text-xs font-bold text-gray-900 tracking-wide">Total Spending</span>
+                <div class="flex items-baseline mt-1">
+                    <span class="text-2xl font-bold text-gray-900">₱</span>
+                    <span class="text-[21px] font-bold text-gray-900">{{ number_format($totalSpending, 2) }}</span>
                 </div>
             </div>
         </div>
