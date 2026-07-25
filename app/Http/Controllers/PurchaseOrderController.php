@@ -161,8 +161,8 @@ class PurchaseOrderController extends Controller
 
     public function orderHistory()
     {
-        // Sort by po_number ascending so it matches the request sequence (PO-2026-001, PO-2026-002, etc.)
-        $purchases = Purchase::with('supplier')
+        // Display actual purchase orders in history, not the separate purchases table.
+        $purchases = PurchaseOrder::with(['supplier', 'items'])
             ->orderBy('po_number', 'asc')
             ->get();
 
