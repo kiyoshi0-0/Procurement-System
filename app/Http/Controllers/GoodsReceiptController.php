@@ -140,18 +140,14 @@ class GoodsReceiptController extends Controller
     }
 
 
-    public function exportPdf()
-    {
-        $receipts = Receipt::all();
-
-        $pdf = Pdf::loadView(
-            'exports.goods_receipts_pdf',
-            compact('receipts')
-        );
-
-        return $pdf->download(
-            'goods-receipts.pdf'
-        );
-    }
+public function exportPdf()
+{
+    $receipts = Receipt::all();
+    
+    // I-load ang view at i-download agad bilang PDF file
+    $pdf = Pdf::loadView('receipts-pdf', compact('receipts'));
+    
+    return $pdf->download('goods-receipts.pdf');
+}
 
 }

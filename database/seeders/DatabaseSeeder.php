@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
+use App\Models\Receipt;
+use App\Models\DeliveryIssue;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,8 +17,9 @@ class DatabaseSeeder extends Seeder
         SupplierSeeder::class,
         ContractSeeder::class,
         PurchaseRequestSeeder::class,
-        GoodsReceiptSeeder::class, // This will automatically trigger the model event above!
-    ]);
+
+    GoodsReceiptSeeder::class,  // Sunod ang Goods Receipt para may paghugutan ito
+]);
 
         // Get all suppliers sorted by ID
         $supplierIds = Supplier::orderBy('id')->pluck('id')->toArray();
@@ -44,5 +47,18 @@ class DatabaseSeeder extends Seeder
                     'purchase_order_id' => $po->id
                 ]);
         }
+        
+        Receipt::factory(100)->create()->each(function ($receipt) {
+            if (fake()->boolean(30)) {
+                DeliveryIssue::factory()->create([
+                    'receipt_id' => $receipt->id,
+                    'receipt_number' => $receipt->gr_number,
+                    'supplier' => $receipt->supplier,
+                    'item_name' => $receipt->item_name,
+                ]);
+            }
+        });
     }
 }
+    
+    
