@@ -761,13 +761,14 @@
       if(masterBtn) masterBtn.disabled = true;
 
       // IPADALA NA ANG DATA SA LARAVEL CONTROLLER VIA AJAX FETCH
-fetch(`/requests/${activeRequestId}/update-status`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    },
+      const baseUrl = "{{ url('') }}";
+      fetch(`${baseUrl}/requests/${activeRequestId}/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
     body: JSON.stringify({ 
         status: activeDecision, 
         comment: commentText 

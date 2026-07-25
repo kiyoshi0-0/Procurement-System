@@ -592,7 +592,8 @@
       if(masterBtn) masterBtn.disabled = true;
 
       // IPADALA NA ANG DATA SA LARAVEL CONTROLLER VIA AJAX FETCH
-      fetch(`/requests/${activeRequestId}/update-status`, {
+      const baseUrl = "{{ url('') }}";
+      fetch(`${baseUrl}/requests/${activeRequestId}/update-status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

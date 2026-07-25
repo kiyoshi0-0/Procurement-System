@@ -12,17 +12,21 @@
     <form action="{{ route('orders.update', $po->id) }}" method="POST" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-6">
         @csrf
         @method('PUT')
+        <input type="hidden" name="po_number" value="{{ $po->po_number }}">
+        <input type="hidden" name="date" value="{{ $po->date }}">
+        <input type="hidden" name="status" value="{{ $po->status }}">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            <!-- Left Side: Supplier and Address -->
+            <!-- Left Side: Supplier -->
             <div class="space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-gray-700">Supplier</label>
-                    <input type="text" name="supplier" value="{{ $po->supplier }}" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700">Delivery Address</label>
-                    <input type="text" name="delivery_address" value="{{ $po->delivery_address }}" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select name="supplier_id" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Select supplier</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ old('supplier_id', $po->supplier_id) == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

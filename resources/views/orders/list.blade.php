@@ -1,5 +1,5 @@
 @extends('layouts.app')
-//ssss
+
 @section('content')
 <section id="po-list-view" class="view-panel space-y-6 max-w-[98%] w-full mx-auto p-4 md:p-6">
     
@@ -169,7 +169,6 @@
         </div>
     </div>
 
-    <button onclick="window.location.href='{{ route('orders.create') }}'" class="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 z-10 cursor-pointer">&#43;</button>
 </section>
 
 <script>

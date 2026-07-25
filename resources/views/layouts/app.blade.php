@@ -184,10 +184,6 @@
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.list') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Purchase Order List</span>
                             </a>
-                            <a href="{{ route('orders.create') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('orders.create') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
-                                <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.create') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
-                                <span>Create/Edit PO</span>
-                            </a>
                             <a href="{{ route('orders.orderhistory') }}" class="flex items-center space-x-3 px-4 py-2 rounded-md text-sm {{ request()->routeIs('orders.orderhistory') ? 'sub-active' : 'text-gray-500 hover:text-gray-800' }}">
                                 <span class="w-2 h-2 rounded-full {{ request()->routeIs('orders.orderhistory') ? 'sub-dot-active' : 'bg-gray-300' }}"></span>
                                 <span>Purchase History</span>

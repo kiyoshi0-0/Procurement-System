@@ -20,8 +20,8 @@
 
     $progressWidth = match($statusKey) {
         'Delivered' => '100%',
+        'Sent' => '100%',
         'Confirmed' => '66%',
-        'Sent' => '33%',
         default => '0%',
     };
 @endphp
@@ -68,8 +68,8 @@
                     @php
                         $isCompleted = match($statusKey) {
                             'Delivered' => true,
+                            'Sent' => true,
                             'Confirmed' => $index <= 2,
-                            'Sent' => $index <= 1,
                             default => $index === 0,
                         };
                     @endphp
@@ -95,12 +95,13 @@
                         <span class="font-bold text-gray-800 text-sm">{{ $po->supplier->name ?? 'N/A' }}</span>
                     </div>
                     <div class="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100">
-                        <span class="font-semibold text-gray-400 block mb-1">Delivery Address</span>
-                        <span class="font-bold text-gray-800 text-sm">{{ $po->delivery_address }}</span>
+                        <span class="font-semibold text-gray-400 block mb-1">Address</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ $po->supplier->address ?? 'N/A' }}</span>
                     </div>
                     <div class="bg-gray-50/60 p-3.5 rounded-xl border border-gray-100">
-                        <span class="font-semibold text-gray-400 block mb-1">Order Date</span>
-                        <span class="font-bold text-gray-800 text-sm">{{ $po->created_at?->format('M d, Y') }}</span>
+                        <span class="font-semibold text-gray-400 block mb-1">Contact Info</span>
+                        <span class="font-bold text-gray-800 text-sm block">{{ $po->supplier->contact_person ?? 'N/A' }}</span>
+                        <span class="text-gray-500 text-[11px]">{{ $po->supplier->phone ?? '' }}{{ $po->supplier->phone && $po->supplier->email ? ' · ' : '' }}{{ $po->supplier->email ?? '' }}</span>
                     </div>
                 </div>
             </div>
@@ -138,34 +139,20 @@
                 </div>
             </div>
 
-            <!-- Matching Cards Section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Match Invoice</h3>
-                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wide">Matched</span>
-                    </div>
-                    <p class="text-xs text-emerald-600 font-semibold flex items-center gap-2">✓ Match PO's as delivered</p>
-                </div>
-
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Match Delivery Receipt</h3>
-                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wide">Matched</span>
-                    </div>
-                    <div class="text-xs text-emerald-600 font-semibold space-y-1">
-                        <p class="flex items-center gap-2">✓ Match Invoice</p>
-                        <p class="flex items-center gap-2">✓ Match Delivery Receipt</p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Sidebar Actions -->
         <div class="lg:col-span-3 space-y-6">
             <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs space-y-2.5">
-                <a href="#" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Send to Supplier</a>
-                <a href="{{ route('orders.details', $po->po_number) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Re-print</a>
+                @if(strtolower($po->status) === 'sent')
+                    <a href="{{ route('orders.print', $po->po_number) }}" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Re-print</a>
+                @else
+                    <form action="{{ route('orders.send', $po->id) }}" method="POST" class="m-0">
+                        @csrf
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Send to Supplier</button>
+                    </form>
+                @endif
+                <a href="{{ route('orders.supplier', $po->po_number) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Supplier Preview</a>
                 <a href="{{ route('orders.edit', $po->id) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Revise</a>
                 <form action="{{ route('orders.cancel', $po->id) }}" method="POST" class="pt-1">
                     @csrf

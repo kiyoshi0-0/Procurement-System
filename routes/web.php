@@ -72,6 +72,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     // Actions
     Route::post('/store', [PurchaseOrderController::class, 'store'])->name('store');
     Route::put('/update/{id}', [PurchaseOrderController::class, 'update'])->name('update');
+    Route::post('/send/{id}', [PurchaseOrderController::class, 'sendToSupplier'])->name('send');
     Route::post('/cancel/{id}', [PurchaseOrderController::class, 'cancel'])->name('cancel');
     Route::delete('/delete/{id}', [PurchaseOrderController::class, 'destroy'])->name('destroy');
 });
