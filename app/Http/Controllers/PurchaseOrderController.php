@@ -162,20 +162,13 @@ class PurchaseOrderController extends Controller
     }
 
     public function orderHistory()
-    {
-        // Prefer flat Purchase history when available, otherwise fallback to PO item history.
-        if (Purchase::count() > 0) {
-            $historyItems = Purchase::with('supplier')
-                ->orderBy('created_at', 'desc')
-                ->get();
-        } else {
-            $historyItems = PurchaseOrderItem::with(['purchaseOrder.supplier'])
-                ->orderBy('created_at', 'desc')
-                ->get();
-        }
+{
+    // Fetch the purchases (include any relationships like supplier if needed)
+    $purchases = Purchase::with('supplier')->get();
 
-        return view('orders.orderhistory', compact('historyItems'));
-    }
+    // Pass the variable into the view
+    return view('orders.orderhistory', compact('purchases'));
+}
     
 
     public function destroy($id)
@@ -232,5 +225,47 @@ class PurchaseOrderController extends Controller
         $po = PurchaseOrder::with(['items', 'supplier'])->findOrFail($id);
 
         return view('orders.supplier', compact('po'));
+    }
+
+    /**
+     * Mark the specified purchase order as delivered and generate its goods receipt.
+     */
+    public function markAsDelivered($id)
+    {
+        $po = PurchaseOrder::with(['supplier', 'items'])->findOrFail($id);
+        
+        // Update PO status to Delivered
+        $po->update(['status' => 'Delivered']);
+
+        // Pull the first item details (or handle collection items accordingly)
+        $firstItem = $po->items->first();
+
+        // Automatically create the Goods Receipt tied to this Purchase Order
+        \App\Models\Receipt::firstOrCreate(
+            ['purchase_order_id' => $po->id],
+            [
+                'gr_number' => 'GR-' . strtoupper(\Illuminate\Support\Str::random(5)),
+                'po_number' => $po->po_number,
+                'supplier' => $po->supplier->name ?? 'Default Supplier',
+                'item_name' => $firstItem->item_name ?? ($firstItem->name ?? 'Computer Part'),
+                'po_quantity' => $firstItem->qty ?? 1,
+                'gr_quantity' => $firstItem->qty ?? 1, // Default to full count, editable later
+                'warehouse' => 'Main Warehouse',
+                'inspection_status' => 'Pending',
+                'match_status' => 'MATCHED',
+                'status' => 'Pending',
+                'approved_at' => null, // Starts unapproved until explicitly approved in Goods Receipt view
+            ]
+        );
+
+        // Log the activity[cite: 5, 7]
+        ActivityLog::create([
+            'po_number' => $po->po_number,
+            'activity' => 'Delivered',
+            'details' => "Marked Purchase Order {$po->po_number} as Delivered and generated Goods Receipt.",
+            'user_name' => 'Admin'
+        ]);
+
+        return redirect()->back()->with('success', 'Purchase order marked as delivered and receipt generated.');
     }
 }

@@ -15,21 +15,10 @@ class ReceiptFactory extends Factory
         $poNumber = 'PO-' . str_pad($sequence++, 3, '0', STR_PAD_LEFT);
 
         $poQty = $this->faker->numberBetween(20, 50);
-        $hasQtyDiscrepancy = $this->faker->boolean(25); 
-        $grQty = $hasQtyDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
-
-        $poPrice = $this->faker->randomFloat(2, 1500, 25000);
-        $hasPriceMismatch = $this->faker->boolean(20); 
-        $invoicePrice = $hasPriceMismatch ? $poPrice + $this->faker->randomFloat(2, 150, 2500) : $poPrice;
-
-        $matchStatus = 'MATCHED';
-        if ($hasQtyDiscrepancy) {
-            $matchStatus = 'QTY MISMATCH';
-        } elseif ($hasPriceMismatch) {
-            $matchStatus = 'PRICE MISMATCH';
-        }
-
-        $inspectionStatus = $this->faker->randomElement(['Passed', 'Failed', 'Pending']);
+        
+        // Para magkaroon ng discrepancy (minsan kulang ang dine-deliver)
+        $hasDiscrepancy = $this->faker->boolean(30); // 30% chance na magka-issue
+        $grQty = $hasDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
 
         $poPrice = $this->faker->randomFloat(2, 1000, 25000);
         $invoicePrice = $hasDiscrepancy ? $poPrice + $this->faker->randomFloat(2, 1, 2500) : $poPrice;
@@ -58,7 +47,6 @@ class ReceiptFactory extends Factory
             'invoice_price' => $invoicePrice,
             'match_status' => $hasDiscrepancy ? 'PRICE MISMATCH' : 'MATCHED',
             'approved_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
-
         ];
     }
 }

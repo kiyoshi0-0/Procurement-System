@@ -19,24 +19,21 @@ class Receipt extends Model
     }
 
     public function getComputedMatchStatusAttribute()
-    {
-        if ($this->inspection_status !== 'Passed') {
-            return 'PENDING';
-        }
-
-        if ($this->po_quantity !== $this->gr_quantity) {
-            return 'QTY MISMATCH';
-        }
-
-        if (isset($this->po_price, $this->invoice_price) && bccomp($this->po_price, $this->invoice_price, 2) !== 0) {
-            return 'PRICE MISMATCH';
-        }
-
-        return 'MATCHED';
+{
+    if ($this->inspection_status !== 'Passed') {
+        return 'PENDING';
     }
-
-    public function getEffectiveMatchStatusAttribute()
-    {
-        return $this->match_status ?? $this->computed_match_status;
+    if ($this->po_quantity !== $this->gr_quantity) {
+        return 'QTY MISMATCH';
     }
+    if (number_format($this->po_price, 2) !== number_format($this->invoice_price, 2)) {
+        return 'PRICE MISMATCH';
+    }
+    return 'MATCHED';
+}
+
+public function getEffectiveMatchStatusAttribute()
+{
+    return $this->match_status ?? $this->computed_match_status;
+}
 }

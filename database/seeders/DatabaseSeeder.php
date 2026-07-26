@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ContractSeeder::class,
             PurchaseRequestSeeder::class,
-            PurchaseOrderSeeder::class,
-            GoodsReceiptSeeder::class,  // Sunod ang Goods Receipt para may paghugutan ito
+            // PurchaseOrderSeeder::class,  <-- Remove or comment out this line
+            // GoodsReceiptSeeder::class,  
         ]);
 
         // Get all suppliers sorted by ID

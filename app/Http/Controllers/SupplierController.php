@@ -10,15 +10,15 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
-        // Start the query builder
-        $query = Supplier::orderBy('created_at', 'desc');
+        // Force a deterministic order by ID so the UI matches your database sequence
+        $query = Supplier::orderBy('id', 'asc');
 
         // Apply search filter if present
         if ($request->filled('search')) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
 
-        // Paginate results (this keeps the search parameter across pages automatically)
+        // Paginate results
         $suppliers = $query->paginate(10)->withQueryString();
 
         return view('suppliers.index', compact('suppliers')); 

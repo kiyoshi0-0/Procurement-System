@@ -120,16 +120,17 @@ Route::prefix('receipts')->name('receipts.')->group(function () {
 
 Route::put('/goods-receipt/{id}', [GoodsReceiptController::class, 'update']);
   
-    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
-Route::post('/delivery-issues', [DeliveryIssueController::class, 'store'])->name('delivery-issues.store');
-// Route para sa Edit/Update modal
-Route::put('/delivery-issues/{id}', [DeliveryIssueController::class, 'update'])->name('delivery-issues.update');
+    // Delivery Issue Routes (Grouped cleanly)
+Route::prefix('delivery-issues')->name('delivery-issues.to.')->group(function () {
+    Route::post('/', [DeliveryIssueController::class, 'store'])->name('store');
+    Route::put('/{id}', [DeliveryIssueController::class, 'update'])->name('update');
+    Route::patch('/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('resolve');
+});
 
 // Goods Receipt Routes
 Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
     Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
-    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
     Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
     Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
     Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');

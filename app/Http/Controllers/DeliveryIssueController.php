@@ -46,8 +46,18 @@ public function destroy($id)
 
 public function store(Request $request)
 {
+    $request->validate([
+        'receipt_id' => 'required|exists:receipts,id',
+        'receipt_number' => 'required',
+        'supplier' => 'required',
+        'item_name' => 'required',
+        'issue_type' => 'required',
+        'priority' => 'required',
+        'status' => 'required',
+    ]);
+
     $issue = new \App\Models\DeliveryIssue();
-    $issue->receipt_id = 1;
+    $issue->receipt_id = $request->receipt_id;
     $issue->receipt_number = $request->receipt_number;
     $issue->supplier = $request->supplier;
     $issue->item_name = $request->item_name;

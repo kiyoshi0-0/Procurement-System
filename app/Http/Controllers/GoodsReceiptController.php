@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Receipt;
+use App\Models\PurchaseOrder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -10,57 +11,42 @@ class GoodsReceiptController extends Controller
 {
 
     public function index()
-    {
-        $receipts = Receipt::latest()->get();
+{
+    // Fetch all active receipts
+    $receipts = Receipt::with('purchaseOrder')
+        ->latest()
+        ->get();
 
-        $shipmentsPending = $receipts->where('inspection_status', 'Pending')->count();
-        $approvedCount = $receipts->where('inspection_status', 'Approved')->count();
+    // Compute counts dynamically using collection filters and model accessors
+    $shipmentsPending = $receipts->where('inspection_status', 'Pending')->count();
+    
+    $discrepanciesCount = $receipts->filter(function ($receipt) {
+        return $receipt->inspection_status !== 'Passed' 
+            || $receipt->effective_match_status !== 'MATCHED';
+    })->count();
 
-        $discrepanciesCount = $receipts->filter(fn($receipt) => in_array($receipt->effective_match_status, [
-            'QTY MISMATCH',
-            'PRICE MISMATCH'
-        ]))->count();
+    $approvedCount = $receipts->whereNotNull('approved_at')->count();
 
-        $deliveryToday = $receipts->whereBetween('created_at', [today()->startOfDay(), today()->endOfDay()])->count();
-
-        $itemsReceived = $receipts->sum('gr_quantity');
-
-        $pendingInspection = $receipts->where('inspection_status', 'Pending')->count();
-
-        $inspectionPassed = $receipts->where('inspection_status', 'Passed')->count();
-
-        $matchedCount = $receipts->filter(fn($receipt) => $receipt->effective_match_status === 'MATCHED')->count();
-
-        $readyFinance = $receipts->where('inspection_status', 'Approved')->count();
-
-
-        return view('receipts.goodreceipt', compact(
-            'receipts',
-            'shipmentsPending',
-            'approvedCount',
-            'discrepanciesCount',
-            'deliveryToday',
-            'itemsReceived',
-            'pendingInspection',
-            'inspectionPassed',
-            'matchedCount',
-            'readyFinance'
-        ));
-    }
+    return view('receipts.goodreceipt', compact(
+        'receipts', 
+        'shipmentsPending', 
+        'discrepanciesCount', 
+        'approvedCount'
+    ));
+}
 
 
     public function approve($id)
-{
-    $receipt = Receipt::findOrFail($id);
-    $receipt->inspection_status = 'Approved';
-    $receipt->po_price = $receipt->po_price ?? $receipt->po_price;
-    $receipt->invoice_price = $receipt->invoice_price ?? $receipt->invoice_price;
-    $receipt->match_status = $receipt->computed_match_status;
-    $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
-    $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
-    $receipt->save();
+    {
+        $receipt = Receipt::findOrFail($id);
+        $receipt->inspection_status = 'Approved';
+        $receipt->invoice_price = $receipt->invoice_price ?? $receipt->invoice_price;
+        $receipt->match_status = $receipt->computed_match_status;
+        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
+        $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
+        $receipt->save();
 
-  return redirect()->back()->with('success', 'Receipt successfully sent to Finance!');
+    return redirect()->route('receipts.index')->with('success', 'Receipt approved successfully!');
 }
 
 
@@ -120,38 +106,14 @@ class GoodsReceiptController extends Controller
         $receipt->invoice_price = $request->invoice_price;
         $receipt->warehouse = $request->warehouse;
         $receipt->inspection_status = $request->inspection_status;
-
-        $receipt->match_status = $request->match_status;
-
-
-        if($request->inspection_status == 'Failed'){
-
-        //  $receipt->status = 'Pending';
-            $receipt->approved_at = null;
-
-        }
-        elseif(
-            $request->inspection_status == 'Passed'
-            &&
-            $request->match_status == 'MATCHED'
-        ){
-
-           
-            $receipt->approved_at = now();
-
-        }
-
         $receipt->match_status = $receipt->computed_match_status;
-=
 
         $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
         $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
 
         $receipt->save();
 
-        return redirect()
-            ->route('receipts.index')
-            ->with('success','Receipt updated.');
+        return redirect()->route('orders.list')->with('success', 'Purchase Order updated and synced successfully.');
     }
 
 
@@ -171,7 +133,11 @@ class GoodsReceiptController extends Controller
 
     public function threeWayMatching()
     {
+        // We use whereIn to catch both 'DELIVERED' and 'Delivered'
         $receipts = Receipt::with('purchaseOrder')
+            ->whereHas('purchaseOrder', function($query) {
+                $query->whereIn('status', ['DELIVERED', 'Delivered']); 
+            })
             ->latest()
             ->get();
 
@@ -199,34 +165,25 @@ class GoodsReceiptController extends Controller
 }
 
 
-  public function paymentValidation()
-{
-    $receipts = Receipt::all();
+    public function paymentValidation()
+    {
+        $receipts = Receipt::latest()->get();
 
-    // Bilangin ang mga na-send na sa finance
-    $sentToFinanceCount = Receipt::where('match_status', 'SENT TO FINANCE')->orWhereNotNull('approved_at')->count();
-    $approvedPaymentsCount = Receipt::where('match_status', 'MATCHED')->orWhere('match_status', 'COMPLETED')->count();
-    $paymentIssuesCount = Receipt::where('match_status', 'LIKE', '%MISMATCH%')->count();
-    $totalInvoices = $receipts->count();
-
-    return view('receipts.paymentvalidation', compact(
-        'receipts', 
-        'sentToFinanceCount', 
-        'approvedPaymentsCount', 
-        'paymentIssuesCount', 
-        'totalInvoices'
-    ));
-}
+     return view(
+    'receipts.paymentvalidation',
+    compact('receipts')
+);
+    }
 
 
-public function exportPdf()
-{
-    $receipts = Receipt::all();
-    
-    // I-load ang view at i-download agad bilang PDF file
-    $pdf = Pdf::loadView('receipts-pdf', compact('receipts'));
-    
-    return $pdf->download('goods-receipts.pdf');
-}
+    public function exportPdf()
+    {
+        $receipts = Receipt::all();
+        
+        // I-load ang view at i-download agad bilang PDF file
+        $pdf = Pdf::loadView('receipts-pdf', compact('receipts'));
+        
+        return $pdf->download('goods-receipts.pdf');
+    }
 
 }

@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryIssue extends Model
 {
-    /** @use HasFactory<\Database\Factories\DeliveryIssueFactory> */
     use HasFactory;
+
+    protected $guarded = [];
+
+    public function receipt()
+    {
+        return $this->belongsTo(Receipt::class, 'receipt_id');
+    }
 }
-    
