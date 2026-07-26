@@ -123,7 +123,7 @@
                   @if(strtolower($request->status) === 'rejected')
                     @php $hasRejected = true; @endphp
                     <tr class="hover:bg-gray-50">
-                      <td class="p-4 font-bold text-gray-800">REQ-{{ str_pad($request->id, 3, '0', STR_PAD_LEFT) }}</td>
+                      <td class="p-4 font-bold text-gray-800">REQ-{{ $request->id }}</td>
                       <td class="p-4">{{ $request->dept }}</td>
                       <td class="p-4">{{ $request->item_name }}</td>
                       <td class="p-4">
@@ -141,7 +141,7 @@
                         
                         <button 
                           onclick="handleViewClick(this)"
-                          data-req-id="REQ-{{ str_pad($request->id, 3, '0', STR_PAD_LEFT) }}"
+                          data-req-id="REQ-{{ $request->id }}"
                           data-priority="{{ ucfirst($request->priority) }}"
                           data-item-name="{{ $request->item_name }}"
                           data-qty="{{ $request->qty }}"

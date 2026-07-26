@@ -114,7 +114,7 @@
                 @foreach($requests as $request)
                   @if(strtolower($request->status) === 'approved')
                     <tr class="hover:bg-gray-50">
-                      <td class="p-4 font-bold text-gray-800">REQ-{{ str_pad($request->id, 3, '0', STR_PAD_LEFT) }}</td>
+                     <td class="p-4 font-bold text-gray-800">REQ-{{ $request->id }}</td>
                       <td class="p-4">{{ $request->dept }}</td>
                       <td class="p-4">
                         {{ $request->item_name }}
@@ -274,7 +274,7 @@
     if (!request) return;
 
       // Match display structural constraints (REQ-002 format)
-      const formattedId = 'REQ-' + String(request.id).padStart(3, '0');
+     const formattedId = 'REQ-' + request.id;
       document.getElementById('modal-req-id').innerText = formattedId;
 
       // Handle Component Priorities Dynamically

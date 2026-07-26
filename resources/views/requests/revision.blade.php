@@ -128,7 +128,7 @@
 
                 @forelse($revisionRequests as $request)
                 <tr class="hover:bg-gray-50">
-                  <td class="p-4 font-bold text-gray-800">REQ-{{ str_pad($request->id, 3, '0', STR_PAD_LEFT) }}</td>
+                  <td class="p-4 font-bold text-gray-800">REQ-{{ $request->id }}</td>
                   <td class="p-4">{{ $request->dept }}</td>
                   <td class="p-4 text-ellipsis overflow-hidden max-w-45 whitespace-nowrap">{{ $request->item_name }}</td>
                   <td class="p-4">
@@ -304,7 +304,7 @@
       const manager_comment = button.getAttribute('data-manager_comment') || 'Please review information updates requested.';
       const justification = button.getAttribute('data-justification') || 'No custom justification notes attached.';
 
-      const paddedId = 'REQ-' + String(id).padStart(3, '0');
+      const paddedId = 'REQ-' + id;
       const totalAmount = (qty * price).toFixed(2);
 
       document.getElementById('drawer-id-badge').innerText = paddedId;
