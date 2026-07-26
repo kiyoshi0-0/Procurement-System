@@ -36,6 +36,13 @@ class DeliveryIssueController extends Controller
 
     return redirect()->back()->with('success', 'Issue updated successfully.');
 }
+public function destroy($id)
+{
+    $issue = DeliveryIssue::findOrFail($id);
+    $issue->delete();
+
+    return redirect()->back()->with('success', 'Delivery issue deleted successfully.');
+
 
 public function store(Request $request)
 {

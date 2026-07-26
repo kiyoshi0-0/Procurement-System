@@ -77,6 +77,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
 });
 
 
+
     //Requests and Approval Routes
     Route::get('/requests/all', [PurchaseRequestController::class, 'showAllRequests'])->name('requests.main');
 
@@ -97,71 +98,37 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/requests/revision', [PurchaseRequestController::class, 'showRevisionRequests'])->name('requests.revision');
     Route::get('/requests/pending', [PurchaseRequestController::class, 'showPendingRequests'])->name('requests.pending');
 
+
+
+    Route::post('/run-matching', [GoodsReceiptController::class, 'runMatching'])->name('runMatching');
 // Halimbawa ng tamang Route para sa pag-update
-Route::put('/goods-receipt/{id}', [GoodsReceiptController::class, 'update']);
-  
-    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
-Route::post('/delivery-issues', [DeliveryIssueController::class, 'store'])->name('delivery-issues.store');
-// Route para sa Edit/Update modal
-Route::put('/delivery-issues/{id}', [DeliveryIssueController::class, 'update'])->name('delivery-issues.update');
-
-Route::prefix('receipts')->name('receipts.')->group(function () {
-
-
-    Route::get('/',
-        [GoodsReceiptController::class, 'index'])
-        ->name('index');
-
-
-    Route::get('/delivery-issues',
-        [DeliveryIssueController::class, 'index'])
-        ->name('delivery');
-
-
-    Route::get('/three-way-matching',
-        [GoodsReceiptController::class, 'threeWayMatching'])
-        ->name('threeway');
-
-
-    Route::get('/payment-validation',
-        [GoodsReceiptController::class, 'paymentValidation'])
-        ->name('payment');
-
-
-    Route::put('/receipts/{receipt}/approve', [GoodsReceiptController::class, 'approve'])->name('receipts.approve');
-
-
-    Route::get('/{id}/edit',
-        [GoodsReceiptController::class, 'edit'])
-        ->name('edit');
-
-
-    Route::put('/{id}',
-        [GoodsReceiptController::class, 'update'])
-        ->name('update');
-
-
-    Route::get('/view/{id}',
-        [GoodsReceiptController::class, 'show'])
-        ->name('view');
-
-});
-
-
-
-// Goods Receipt Routes (Naayos na at tinanggal ang duplicate)
 Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
-    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
+    
+    // Ilagay ito rito sa loob:
+    Route::post('/run-matching', [GoodsReceiptController::class, 'runMatching'])->name('runMatching');
+
+    Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
     Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
     Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
-    Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
     
+    Route::post('/validate-payment/{id}', [GoodsReceiptController::class, 'validatePayment'])->name('validatePayment');
+    
+    Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
     Route::get('/{id}/edit', [GoodsReceiptController::class, 'edit'])->name('edit');
     Route::put('/{id}', [GoodsReceiptController::class, 'update'])->name('update');
-    
-    // Naka-ayos na para sumalo sa /receipts/{id} fetch request ng frontend modal mo
     Route::get('/{id}', [GoodsReceiptController::class, 'show'])->name('view');
+    Route::delete('/{id}', [GoodsReceiptController::class, 'destroy'])->name('destroy');
+});
+// ==========================================
+// DELIVERY ISSUES INDEPENDENT ROUTES (Para sa Delete at Actions)
+// ==========================================
+Route::prefix('delivery-issues')->name('delivery-issues.')->group(function () {
+    Route::get('/', [DeliveryIssueController::class, 'index'])->name('index');
+    Route::post('/', [DeliveryIssueController::class, 'store'])->name('store');
+    Route::put('/{id}', [DeliveryIssueController::class, 'update'])->name('update');
+    Route::patch('/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('resolve');
+    Route::delete('/{id}', [DeliveryIssueController::class, 'destroy'])->name('destroy');
 });
 
 // Export Routes
@@ -169,4 +136,4 @@ Route::get('/export-goods-receipts', function () {
     return Excel::download(new GoodsReceiptsExport, 'goods-receipts.xlsx');
 })->name('export.excel');
 
-Route::get('/export-pdf', [GoodsReceiptController::class, 'exportPdf'])->name('export.pdf');
+Route::get('/export-pdf', [GoodsReceiptController::class, 'exportPdf'])->name('export.pdf');    

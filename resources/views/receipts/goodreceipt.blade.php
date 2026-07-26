@@ -120,17 +120,28 @@
                     {{ $receipt->match_status }}
                     </span>
                 </td>
-                <td class="px-5 py-4">
-                    <div class="flex justify-center gap-2">
-                        <button type="button" onclick="openReceiptModal({{ $receipt->id }})" class="px-3 py-2 bg-blue-600 text-white rounded text-xs cursor-pointer">View</button>
-                        <button type="button" onclick="openEditModal({{ $receipt->id }})" class="px-3 py-2 bg-yellow-500 text-white rounded text-xs cursor-pointer">Edit</button>
-                        <form action="{{ route('receipts.approve', $receipt->id) }}" method="POST" class="inline">
-                            @csrf
-                            @method('PUT')
-                            <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded text-xs cursor-pointer">Approve</button>
-                        </form>
-                    </div>
-                </td>
+               <td class="px-5 py-4">
+    <div class="flex justify-center items-center gap-2">
+        <!-- View Button -->
+        <button type="button" onclick="openReceiptModal({{ $receipt->id }})" title="View Details" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+            <i class="fa-solid fa-eye text-xs"></i>
+        </button>
+
+        <!-- Edit Button -->
+        <button type="button" onclick="openEditModal({{ $receipt->id }})" title="Edit Receipt" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-amber-50 text-slate-500 hover:text-amber-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+            <i class="fa-solid fa-pen-to-square text-xs"></i>
+        </button>
+
+        <!-- Approve Button -->
+        <form action="{{ route('receipts.approve', $receipt->id) }}" method="POST" class="inline">
+            @csrf
+            @method('PUT')
+            <button type="submit" title="Approve Receipt" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+                <i class="fa-solid fa-check text-xs"></i>
+            </button>
+        </form>
+    </div>
+</td>
             </tr>
             @empty
             <tr>
@@ -269,13 +280,14 @@ function closeReceiptDetails() {
 }
 
 // Edit Modal
+// Edit Modal
 function openEditModal(id) {
     const modal = document.getElementById('editReceiptModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
-    // Siguraduhing kasama ang ID sa URL patungong update route
-    fetch('/goods-receipt/' + id + '/edit')
+    // Palitan ang /goods-receipt/ ng /receipts/ para tumugma sa web.php
+    fetch('/receipts/' + id + '/edit')
         .then(response => response.json())
         .then(data => {
             document.getElementById('edit_supplier').value = data.supplier ?? '';
@@ -286,8 +298,8 @@ function openEditModal(id) {
             document.getElementById('edit_inspection_status').value = data.inspection_status ?? 'Passed';
             document.getElementById('edit_match_status').value = data.match_status ?? 'MATCHED';
             
-            // Dito naise-set ang tamang action URL na may ID
-            document.getElementById('editReceiptForm').action = '/goods-receipt/' + id;
+            // Itakda ang tamang action URL papunta sa receipts update route na may ID
+            document.getElementById('editReceiptForm').action = '/receipts/' + id;
         })
         .catch(error => console.error(error));
 }

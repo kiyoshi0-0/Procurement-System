@@ -15,10 +15,21 @@ class ReceiptFactory extends Factory
         $poNumber = 'PO-' . str_pad($sequence++, 3, '0', STR_PAD_LEFT);
 
         $poQty = $this->faker->numberBetween(20, 50);
-        
-        // Para magkaroon ng discrepancy (minsan kulang ang dine-deliver)
-        $hasDiscrepancy = $this->faker->boolean(30); // 30% chance na magka-issue
-        $grQty = $hasDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
+        $hasQtyDiscrepancy = $this->faker->boolean(25); 
+        $grQty = $hasQtyDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
+
+        $poPrice = $this->faker->randomFloat(2, 1500, 25000);
+        $hasPriceMismatch = $this->faker->boolean(20); 
+        $invoicePrice = $hasPriceMismatch ? $poPrice + $this->faker->randomFloat(2, 150, 2500) : $poPrice;
+
+        $matchStatus = 'MATCHED';
+        if ($hasQtyDiscrepancy) {
+            $matchStatus = 'QTY MISMATCH';
+        } elseif ($hasPriceMismatch) {
+            $matchStatus = 'PRICE MISMATCH';
+        }
+
+        $inspectionStatus = $this->faker->randomElement(['Passed', 'Failed', 'Pending']);
 
         return [
             'gr_number' => 'GR-' . strtoupper($this->faker->bothify('#####')),
@@ -28,15 +39,15 @@ class ReceiptFactory extends Factory
                 'Kingston Fury Beast 16GB DDR4 RAM',
                 'AMD Ryzen 5 5600X Processor',
                 'MSI B550M PRO-VDH WIFI Motherboard',
-                'Samsung 980 PRO 1TB NVMe SSD',
-                'NVIDIA GeForce RTX 4060 GPU'
             ]),
             'po_quantity' => $poQty,
             'gr_quantity' => $grQty,
+            'po_price' => $poPrice,
+            'invoice_price' => $invoicePrice,
             'warehouse' => $this->faker->randomElement(['Main Warehouse', 'North Depot', 'South Hub']),
-            'inspection_status' => $hasDiscrepancy ? 'Failed' : 'Passed',
-            'match_status' => $hasDiscrepancy ? 'Discrepancy Found' : 'Matched',
-            'approved_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+            'inspection_status' => $inspectionStatus,
+            'match_status' => $matchStatus,
+            'approved_at' => ($matchStatus === 'MATCHED' && $inspectionStatus === 'Passed') ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
         ];
     }
 }

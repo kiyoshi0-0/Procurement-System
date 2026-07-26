@@ -58,7 +58,7 @@ class GoodsReceiptController extends Controller
     $receipt->approved_at = now();
     $receipt->save();
 
-    return redirect()->route('receipts.index')->with('success', 'Receipt approved successfully!');
+  return redirect()->back()->with('success', 'Receipt successfully sent to Finance!');
 }
 
 
@@ -68,6 +68,42 @@ class GoodsReceiptController extends Controller
             Receipt::findOrFail($id)
         );
     }
+    public function runMatching()
+{
+    // Kunin ang lahat ng receipts
+    $receipts = \App\Models\Receipt::all();
+
+    foreach ($receipts as $receipt) {
+        $status = 'MATCHED';
+
+        // Check kung nag-match ang quantity (PO qty vs GR qty)
+        $isQtyMatch = (int) $receipt->po_quantity === (int) $receipt->gr_quantity;
+        
+        // Check kung nag-match ang price (kung may field kang po_price at invoice_price)
+        $isPriceMatch = true;
+        if (isset($receipt->po_price) && isset($receipt->invoice_price)) {
+            $isPriceMatch = (float) $receipt->po_price === (float) $receipt->invoice_price;
+        }
+
+        // Mag-assign ng tamang status base sa resulta
+        if (!$isQtyMatch && !$isPriceMatch) {
+            $status = 'QTY & PRICE MISMATCH';
+        } elseif (!$isQtyMatch) {
+            $status = 'QTY MISMATCH';
+        } elseif (!$isPriceMatch) {
+            $status = 'PRICE MISMATCH';
+        }
+
+        // I-save ang match status sa database
+        $receipt->match_status = $status;
+        $receipt->save();
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Matagumpay na naisagawa ang automated 3-way matching audit!'
+    ]);
+}
 
 
     public function update(Request $request, $id)
@@ -85,7 +121,7 @@ class GoodsReceiptController extends Controller
 
         if($request->inspection_status == 'Failed'){
 
-            $receipt->status = 'Pending';
+        //  $receipt->status = 'Pending';
             $receipt->approved_at = null;
 
         }
@@ -95,7 +131,7 @@ class GoodsReceiptController extends Controller
             $request->match_status == 'MATCHED'
         ){
 
-            $receipt->status = 'Approved';
+           
             $receipt->approved_at = now();
 
         }
@@ -129,15 +165,44 @@ class GoodsReceiptController extends Controller
     }
 
 
-    public function paymentValidation()
-    {
-        $receipts = Receipt::latest()->get();
+    public function validatePayment($id)
+{
+    try {
+        $receipt = Receipt::findOrFail($id);
+        $receipt->match_status = 'COMPLETED';
+        $receipt->save();
 
-     return view(
-    'receipts.paymentvalidation',
-    compact('receipts')
-);
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment successfully validated and marked as completed!'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+
+  public function paymentValidation()
+{
+    $receipts = Receipt::all();
+
+    // Bilangin ang mga na-send na sa finance
+    $sentToFinanceCount = Receipt::where('match_status', 'SENT TO FINANCE')->orWhereNotNull('approved_at')->count();
+    $approvedPaymentsCount = Receipt::where('match_status', 'MATCHED')->orWhere('match_status', 'COMPLETED')->count();
+    $paymentIssuesCount = Receipt::where('match_status', 'LIKE', '%MISMATCH%')->count();
+    $totalInvoices = $receipts->count();
+
+    return view('receipts.paymentvalidation', compact(
+        'receipts', 
+        'sentToFinanceCount', 
+        'approvedPaymentsCount', 
+        'paymentIssuesCount', 
+        'totalInvoices'
+    ));
+}
 
 
 public function exportPdf()

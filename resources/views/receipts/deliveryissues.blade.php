@@ -80,14 +80,26 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
-        <h2 class="font-bold text-lg mb-5">Issue Categories</h2>
-        <div class="space-y-3">
-            <div class="flex justify-between"><span>Damaged Items</span><strong>{{ collect($deliveryIssues ?? [])->where('issue_type', 'Damaged Items')->count() }}</strong></div>
-            <div class="flex justify-between"><span>Late Deliveries</span><strong>{{ collect($deliveryIssues ?? [])->where('issue_type', 'Late Deliveries')->count() }}</strong></div>
-            <div class="flex justify-between"><span>Missing Items</span><strong>{{ collect($deliveryIssues ?? [])->where('issue_type', 'Missing Items')->count() }}</strong></div>
-            <div class="flex justify-between"><span>Wrong Items</span><strong>{{ collect($deliveryIssues ?? [])->where('issue_type', 'Wrong Items')->count() }}</strong></div>
+    <h2 class="font-bold text-lg mb-5">Issue Categories</h2>
+    <div class="space-y-3">
+        <div class="flex justify-between">
+            <span>Damaged Items</span>
+            <strong>{{ collect($deliveryIssues ?? [])->filter(fn($i) => strcasecmp(trim($i->issue_type ?? ''), 'Damaged Items') == 0)->count() }}</strong>
+        </div>
+        <div class="flex justify-between">
+            <span>Late Deliveries</span>
+            <strong>{{ collect($deliveryIssues ?? [])->filter(fn($i) => strcasecmp(trim($i->issue_type ?? ''), 'Late Deliveries') == 0)->count() }}</strong>
+        </div>
+        <div class="flex justify-between">
+            <span>Missing Items</span>
+            <strong>{{ collect($deliveryIssues ?? [])->filter(fn($i) => strcasecmp(trim($i->issue_type ?? ''), 'Missing Items') == 0)->count() }}</strong>
+        </div>
+        <div class="flex justify-between">
+            <span>Wrong Items</span>
+            <strong>{{ collect($deliveryIssues ?? [])->filter(fn($i) => strcasecmp(trim($i->issue_type ?? ''), 'Wrong Items') == 0)->count() }}</strong>
         </div>
     </div>
+</div>
 
     <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
         <h2 class="font-bold text-lg mb-5">Alerts</h2>
@@ -167,25 +179,38 @@
                     @endif
                 </td>
                 <td class="px-5 py-4">{{ $issue->created_at ?? '-' }}</td>
-                <td class="px-5 py-4">
-                    <div class="flex justify-center gap-2">
-                        <button type="button" onclick="openViewModal('{{ $issue->receipt_number }}', '{{ $issue->supplier }}', '{{ $issue->item_name }}', '{{ $issue->issue_type }}')" class="px-3 py-2 bg-blue-600 text-white rounded text-xs">
-                            View
-                        </button>
+             <td class="px-5 py-4">
+    <div class="flex justify-center items-center gap-2">
+        <!-- View Button -->
+        <button type="button" onclick="openViewModal('{{ $issue->receipt_number }}', '{{ $issue->supplier }}', '{{ $issue->item_name }}', '{{ $issue->issue_type }}')" title="View Details" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+            <i class="fa-solid fa-eye text-xs"></i>
+        </button>
 
-                        <button type="button" onclick="openEditModal('{{ $issue->id }}', '{{ $issue->supplier }}', '{{ $issue->item_name }}', '{{ $issue->issue_type }}', '{{ $issue->status }}')" class="px-3 py-2 bg-yellow-500 text-white rounded text-xs">
-                            Edit
-                        </button>
+        <!-- Edit Button -->
+        <button type="button" onclick="openEditModal('{{ $issue->id }}', '{{ $issue->supplier }}', '{{ $issue->item_name }}', '{{ $issue->issue_type }}', '{{ $issue->status }}')" title="Edit Issue" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-amber-50 text-slate-500 hover:text-amber-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+            <i class="fa-solid fa-pen-to-square text-xs"></i>
+        </button>
 
-                        <form action="{{ route('delivery-issues.resolve', $issue->id) }}" method="POST" class="inline">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded text-xs">
-                                Resolve
-                            </button>
-                        </form>
-                    </div>
-                </td>
+        <!-- Resolve Button -->
+        <form action="{{ route('delivery-issues.resolve', $issue->id) }}" method="POST" class="inline">
+            @csrf
+            @method('PATCH')
+            <button type="submit" title="Resolve Issue" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+                <i class="fa-solid fa-check text-xs"></i>
+            </button>
+        </form>
+
+        <!-- Delete Button -->
+
+        <form action="{{ route('delivery-issues.destroy', $issue->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this delivery issue?');
+                   @csrf
+            @method('DELETE')
+            <button type="submit" title="Delete Issue" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+                <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+        </form>
+    </div>
+</td>
             </tr>
             @empty
             <tr>
