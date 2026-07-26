@@ -280,14 +280,14 @@ Edit Modal
                         <label class="text-xs text-slate-500 mb-1 block">Issue Type</label>
                         <input type="text" name="issue_type" id="editType" class="border rounded-lg p-3 w-full">
                     </div>
-                    <div>
-                        <label class="text-xs text-slate-500 mb-1 block">Status</label>
-                        <select name="status" id="editStatus" class="border rounded-lg p-3 w-full">
-                            <option value="Pending">Pending</option>
-                            <option value="Investigating">Investigating</option>
-                            <option value="Resolved">Resolved</option>
-                        </select>
-                    </div>
+                   <div>
+    <label class="text-xs text-slate-500 mb-1 block">Status</label>
+    <select name="status" id="editStatus" class="border rounded-lg p-3 w-full">
+        <option value="Pending">Pending</option>
+        <option value="Investigating">Investigating</option>
+        <option value="Resolved">Resolved</option>
+    </select>
+</div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded bg-slate-200">Cancel</button>
@@ -400,7 +400,9 @@ function openEditModal(id, supplier, item, type, status) {
     document.getElementById("editItem").value = item;
     document.getElementById("editType").value = type;
     document.getElementById("editStatus").value = status;
-    document.getElementById("editForm").action = "/delivery-issues/" + id;
+    
+    // Dynamically uses Laravel route URL base
+    document.getElementById("editForm").action = "{{ url('delivery-issues') }}/" + id;
     document.getElementById("editIssueModal").classList.remove("hidden");
 }
 

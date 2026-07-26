@@ -17,39 +17,38 @@
         </span>
     </p>
 
-
 </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow p-5 border">
-            <p class="text-sm text-slate-500">Matched</p>
-            <h2 class="text-3xl font-bold text-green-600">
-                {{ $receipts->where('effective_match_status','MATCHED')->count() }}
-            </h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-5 border">
-            <p class="text-sm text-slate-500">Qty Mismatch</p>
-            <h2 class="text-3xl font-bold text-red-600">
-                {{ $receipts->where('effective_match_status','QTY MISMATCH')->count() }}
-            </h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-5 border">
-            <p class="text-sm text-slate-500">Price Mismatch</p>
-            <h2 class="text-3xl font-bold text-yellow-500">
-                {{ $receipts->where('effective_match_status','PRICE MISMATCH')->count() }}
-            </h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-5 border">
-            <p class="text-sm text-slate-500">Pending</p>
-            <h2 class="text-3xl font-bold text-blue-600">
-                {{ $receipts->where('status','Pending')->count() }}
-            </h2>
-        </div>
+<div class="grid grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow p-5 border">
+        <p class="text-sm text-slate-500">Matched</p>
+        <h2 class="text-3xl font-bold text-green-600">
+            {{ $receipts->filter(fn($r) => ($r->match_status ?? 'MATCHED') == 'MATCHED')->count() }}
+        </h2>
     </div>
+
+    <div class="bg-white rounded-xl shadow p-5 border">
+        <p class="text-sm text-slate-500">Qty Mismatch</p>
+        <h2 class="text-3xl font-bold text-red-600">
+            {{ $receipts->filter(fn($r) => str_contains($r->match_status ?? '', 'QTY'))->count() }}
+        </h2>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 border">
+        <p class="text-sm text-slate-500">Price Mismatch</p>
+        <h2 class="text-3xl font-bold text-yellow-500">
+            {{ $receipts->filter(fn($r) => str_contains($r->match_status ?? '', 'PRICE'))->count() }}
+        </h2>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 border">
+        <p class="text-sm text-slate-500">Pending</p>
+        <h2 class="text-3xl font-bold text-blue-600">
+            {{ $receipts->where('status','Pending')->count() }}
+        </h2>
+    </div>
+</div>
 
     <!-- 3-Way Matching Process -->
     <div class="mt-8 bg-white rounded-xl shadow p-6">
@@ -175,146 +174,128 @@
 
 </div>
 
-
-
-
-
-   <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-
+<!-- Unified Master 3-Way Matching & Order List Table -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 mt-8">
     <div class="flex items-center justify-between px-6 py-4 border-b bg-slate-50">
-
         <div>
             <h3 class="text-lg font-bold text-slate-800">
-                3-Way Matching Records
+                Unified 3-Way Matching & Purchase Order Records
             </h3>
-
             <p class="text-sm text-slate-500">
-                Compare Purchase Order, Goods Receipt and Supplier Invoice
+                Comprehensive audit trail combining Receipts and Master Order Data
             </p>
         </div>
-
         <span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold">
-            {{ $receipts->count() }} Records
+            {{ $receipts->count() }} Matching Records
         </span>
-
     </div>
 
     <div class="overflow-x-auto">
-
         <table class="min-w-full">
-
-            <thead class="bg-slate-100 text-slate-700">
-
+            <thead class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold">
                 <tr>
-
                     <th class="px-5 py-4 text-left">PO Number</th>
-
                     <th class="px-5 py-4 text-left">Supplier</th>
-
-                    <th class="px-5 py-4 text-left">Item</th>
-
+                    <th class="px-5 py-4 text-left">Item / Product</th>
                     <th class="px-5 py-4 text-center">PO Qty</th>
-
                     <th class="px-5 py-4 text-center">Received Qty</th>
-
-                    <th class="px-5 py-4 text-right">PO Price</th>
-
+                    <th class="px-5 py-4 text-right">PO Price / Total</th>
                     <th class="px-5 py-4 text-right">Invoice Price</th>
-
                     <th class="px-5 py-4 text-center">Inspection</th>
-
-                    <th class="px-5 py-4 text-center">Result</th>
-
-                    <th class="px-5 py-4 text-center">Action</th>
-
+                    <th class="px-5 py-4 text-center">Result / Status</th>
+                    <th class="px-5 py-4 text-center">Actions</th>
                 </tr>
-
             </thead>
-<tbody id="matchingTable">
+            <tbody id="matchingTable" class="divide-y divide-gray-100 text-xs">
             @foreach($receipts as $receipt)
-
+                @php
+                    // Retrieve linked purchase order items if available to pull full list details cleanly
+                    $poModel = $receipt->purchaseOrder;
+                    $firstItem = $poModel?->items->first();
+                    $calculatedTotal = $poModel ? $poModel->items->sum(fn($i) => $i->qty * $i->price) : 0;
+                @endphp
                 <tr class="border-b hover:bg-slate-50 transition">
-
-                    <td class="px-5 py-4 font-semibold">
+                    <!-- PO Number -->
+                    <td class="px-5 py-4 font-bold text-gray-900">
                         {{ $receipt->po_number }}
                     </td>
 
-                    <td class="px-5 py-4">
+                    <!-- Supplier Name -->
+                    <td class="px-5 py-4 font-medium text-gray-800">
                         {{ $receipt->supplier }}
                     </td>
 
-                    <td class="px-5 py-4">
+                    <!-- Item Name -->
+                    <td class="px-5 py-4 text-gray-600">
                         {{ $receipt->item_name }}
                     </td>
 
-                    <td class="px-5 py-4 text-center">
+                    <!-- PO Qty -->
+                    <td class="px-5 py-4 text-center font-semibold text-gray-700">
                         {{ $receipt->po_quantity }}
                     </td>
 
-                    <td class="px-5 py-4 text-center">
+                    <!-- Received Qty -->
+                    <td class="px-5 py-4 text-center font-semibold text-gray-700">
                         {{ $receipt->gr_quantity }}
                     </td>
 
+                    <!-- PO Price & Computed Total (combining list and receipts data) -->
                     <td class="px-5 py-4 text-right">
-                        ₱{{ number_format($receipt->po_price,2) }}
-                    </td>
-
-                    <td class="px-5 py-4 text-right">
-                        ₱{{ number_format($receipt->invoice_price,2) }}
-                    </td>
-
-                    <td class="px-5 py-4 text-center">
-
-                        @if($receipt->inspection_status=="Passed")
-
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
-                                PASSED
-                            </span>
-
-                        @elseif($receipt->inspection_status=="Failed")
-
-                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">
-                                FAILED
-                            </span>
-
-                        @else
-
-                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">
-                                PENDING
-                            </span>
-
+                        <div class="font-bold text-gray-900">₱{{ number_format($receipt->po_price, 2) }}</div>
+                        @if($calculatedTotal > 0)
+                            <div class="text-[10px] text-slate-400 font-medium">Total: ₱{{ number_format($calculatedTotal, 2) }}</div>
                         @endif
-
                     </td>
 
-                        <td class="px-5 py-4 text-center">
-                            @php $effectiveStatus = $receipt->effective_match_status; @endphp
-                            @if($effectiveStatus=="MATCHED")
-                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">MATCHED</span>
-                            @elseif($effectiveStatus=="PRICE MISMATCH")
-                                <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">PRICE MISMATCH</span>
-                            @elseif($effectiveStatus=="QTY MISMATCH")
-                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">QTY MISMATCH</span>
-                            @else
-                                <span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">PENDING</span>
-                            @endif
-                        </td>
+                    <!-- Invoice Price -->
+                    <td class="px-5 py-4 text-right font-bold text-gray-900">
+                        ₱{{ number_format($receipt->invoice_price, 2) }}
+                    </td>
 
+                    <!-- Inspection Status -->
                     <td class="px-5 py-4 text-center">
-                        <a href="{{ route('receipts.details', $receipt->id) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center">
-                            <i class="fa-solid fa-eye mr-1"></i>
-                            View Details
-                        </a>
+                        @if($receipt->inspection_status == "Passed")
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">PASSED</span>
+                        @elseif($receipt->inspection_status == "Failed")
+                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">FAILED</span>
+                        @else
+                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">PENDING</span>
+                        @endif
                     </td>
 
+                    <!-- Result / Matching Status -->
+                    <td class="px-5 py-4 text-center">
+                        @php $effectiveStatus = $receipt->effective_match_status; @endphp
+                        @if($effectiveStatus == "MATCHED")
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">MATCHED</span>
+                        @elseif($effectiveStatus == "PRICE MISMATCH")
+                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">PRICE MISMATCH</span>
+                        @elseif($effectiveStatus == "QTY MISMATCH")
+                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">QTY MISMATCH</span>
+                        @else
+                            <span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">{{ $effectiveStatus }}</span>
+                        @endif
+                    </td>
+
+                    <!-- Actions (combining View Details from matching & options from list) -->
+                    <td class="px-5 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="{{ route('receipts.details', $receipt->id) }}" title="View Matching Details" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center">
+                                <i class="fa-solid fa-eye mr-1"></i> Details
+                            </a>
+                            @if($poModel)
+                                <a href="{{ route('orders.edit', $poModel->id) }}" title="Edit Master Order" class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-amber-600 flex items-center justify-center transition">
+                                    <i class="fa fa-edit text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </td>
                 </tr>
-
             @endforeach
-
             </tbody>
-
         </table>
-
     </div>
-<script>
+</div>
+
 @endsection

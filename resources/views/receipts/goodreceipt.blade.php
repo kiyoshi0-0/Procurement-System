@@ -122,28 +122,25 @@
                     {{ $status }}
                     </span>
                 </td>
-               <td class="px-5 py-4">
-    <div class="flex justify-center items-center gap-2">
-        <!-- View Button -->
-        <button type="button" onclick="openReceiptModal({{ $receipt->id }})" title="View Details" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
-            <i class="fa-solid fa-eye text-xs"></i>
-        </button>
+                <td class="action-column text-center">
+                    <!-- View Button -->
+                    <button type="button" onclick="openReceiptModal('{{ $receipt->id ?? $receipt->gr_number }}')" class="btn btn-sm btn-light text-blue-600 hover:text-blue-800 mx-1" title="View">
+                        <i class="fas fa-eye"></i>
+                    </button>
 
-        <!-- Edit Button -->
-        <button type="button" onclick="openEditModal({{ $receipt->id }})" title="Edit Receipt" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-amber-50 text-slate-500 hover:text-amber-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
-            <i class="fa-solid fa-pen-to-square text-xs"></i>
-        </button>
+                    <!-- Edit Button -->
+                    <button type="button" onclick="openEditModal('{{ $receipt->id ?? $receipt->gr_number }}')" class="btn btn-sm btn-light text-amber-600 hover:text-amber-800 mx-1" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </button>
 
-        <!-- Approve Button -->
-        <form action="{{ route('receipts.approve', $receipt->id) }}" method="POST" class="inline">
-            @csrf
-            @method('PUT')
-            <button type="submit" title="Approve Receipt" class="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
-                <i class="fa-solid fa-check text-xs"></i>
-            </button>
-        </form>
-    </div>
-</td>
+                    <!-- Check/Approve Button -->
+                    <form action="{{ route('receipts.approve', $receipt->id ?? $receipt->gr_number) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-light text-green-600 hover:text-green-800 mx-1" title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>
+                </td>
             </tr>
             @empty
             <tr>
@@ -156,7 +153,7 @@
     </div>
 </div>
 
-<!-- Edit Receipt Modal (Naayos ang flex class) -->
+<!-- Edit Receipt Modal -->
 <div id="editReceiptModal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
   <div class="bg-white rounded-lg p-6 w-[600px] max-h-[90vh] overflow-y-auto shadow-xl">
     <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -165,7 +162,6 @@
     </div>
     <form id="editReceiptForm" method="POST">
       @csrf
-      @method('PUT')
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1">Supplier</label>
@@ -216,7 +212,7 @@
   </div>
 </div>
 
-<!-- Receipt Details Modal (Naayos ang flex class) -->
+<!-- Receipt Details Modal -->
 <div id="receiptDetailsModal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
   <div class="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto shadow-xl">
     <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -288,13 +284,15 @@ function closeReceiptDetails() {
 // Edit Modal
 // Edit Modal
 function openEditModal(id) {
+    if (!id) {
+        console.error("Receipt ID is missing!");
+        alert("Error: Receipt ID is missing.");
+        return;
+    }
+
     const modal = document.getElementById('editReceiptModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-
-
-    // Palitan ang /goods-receipt/ ng /receipts/ para tumugma sa web.php
-
 
     fetch('/receipts/' + id + '/edit')
         .then(response => response.json())
@@ -309,17 +307,23 @@ function openEditModal(id) {
             document.getElementById('edit_inspection_status').value = data.inspection_status ?? 'Passed';
             document.getElementById('edit_computed_match_status').value = data.effective_match_status ?? data.match_status ?? 'PENDING';
             
-<<<<<<< HEAD
-            // Itakda ang tamang action URL papunta sa receipts update route na may ID
-            document.getElementById('editReceiptForm').action = '/receipts/' + id;
-=======
-            // Dito naise-set ang tamang action URL na may ID
-            document.getElementById('editReceiptForm').action = '/receipts/' + id;
+            const form = document.getElementById('editReceiptForm');
+            form.action = '/receipts/' + id;
+            
+            // Ensure standard POST method is used
+            form.method = 'POST';
+            
+            // Remove any Laravel method spoofing fields if present
+            const spoofedMethod = form.querySelector('input[name="_method"]');
+            if (spoofedMethod) {
+                spoofedMethod.remove();
+            }
+
             updateComputedMatchStatus();
->>>>>>> 562cf55eaf031491acab766d00ea1b23a0ff1042
         })
-        .catch(error => console.error(error));
+        .catch(error => console.error('Error fetching edit data:', error));
 }
+
 function closeEditModal() {
     const modal = document.getElementById('editReceiptModal');
     modal.classList.add('hidden');
@@ -391,15 +395,16 @@ function openSignModal(receiptNo) {
     modal.classList.add('flex');
     clearSignature();
 }
+
 function closeSignModal() {
     const modal = document.getElementById('signModal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
+
 function downloadSignedPDF() {
     alert("Lagda matagumpay na nailapat! Nag-download na ang PDF.");
     closeSignModal();
-    // Pwedeng i-redirect patungo sa export route kung kinakailangan:
     window.location.href = "{{ route('export.pdf') }}";
 }
 

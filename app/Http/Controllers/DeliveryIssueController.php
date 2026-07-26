@@ -26,17 +26,19 @@ class DeliveryIssueController extends Controller
         return redirect()->back()->with('success', 'Issue marked as resolved.');
     }
 
-    public function update(Request $request, $id)
-    {
-        $issue = DeliveryIssue::findOrFail($id);
-        $issue->supplier = $request->supplier;
-        $issue->item_name = $request->item_name;
-        $issue->issue_type = $request->issue_type;
-        $issue->status = $request->status;
-        $issue->save();
+   public function update(Request $request, $id)
+{
+    $issue = DeliveryIssue::findOrFail($id);
+    
+    $issue->supplier = $request->supplier ?? $issue->supplier;
+    $issue->item_name = $request->item_name ?? $issue->item_name;
+    $issue->issue_type = $request->issue_type ?? $issue->issue_type;
+    $issue->status = $request->status ?? $issue->status;
+    
+    $issue->save();
 
-        return redirect()->back()->with('success', 'Issue updated successfully.');
-    }
+    return redirect()->back()->with('success', 'Issue updated successfully.');
+}
 
     public function destroy($id)
     {

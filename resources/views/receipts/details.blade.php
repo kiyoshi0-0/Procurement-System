@@ -18,7 +18,7 @@
                 <div><strong>Warehouse:</strong> {{ $receipt->warehouse }}</div>
                 <div><strong>Inspection:</strong> {{ $receipt->inspection_status }}</div>
                 <div><strong>Status:</strong> {{ $receipt->status }}</div>
-                <div><strong>Approved at:</strong> {{ $receipt->approved_at ? $receipt->approved_at->format('M d, Y H:i') : 'N/A' }}</div>
+             <div><strong>Approved at:</strong> {{ $receipt->approved_at ? \Carbon\Carbon::parse($receipt->approved_at)->format('M d, Y H:i') : 'N/A' }}</div>
             </div>
         </div>
 
