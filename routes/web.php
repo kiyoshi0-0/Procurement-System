@@ -62,12 +62,10 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/orderhistory', [PurchaseOrderController::class, 'orderhistory'])->name('orderhistory');
     Route::get('/history', [PurchaseOrderController::class, 'history'])->name('history');
     
-    Route::get('/orders/{po_number}', [PurchaseOrderController::class, 'show'])->name('orders.details');
-    Route::get('/{poNumber}', [PurchaseOrderController::class, 'show'])->name('details');
     Route::get('/{id}/edit', [PurchaseOrderController::class, 'edit'])->name('edit');
-    
-    Route::get('/{poNumber}/print', [PurchaseOrderController::class, 'print'])->name('print');
-    Route::get('/{poNumber}/supplier', [PurchaseOrderController::class, 'supplierPreview'])->name('supplier');
+    Route::get('/{id}/print', [PurchaseOrderController::class, 'print'])->name('print');
+    Route::get('/{id}/supplier', [PurchaseOrderController::class, 'supplierPreview'])->name('supplier');
+    Route::get('/{id}', [PurchaseOrderController::class, 'show'])->name('details');
 
     // Actions
     Route::post('/store', [PurchaseOrderController::class, 'store'])->name('store');
@@ -106,62 +104,17 @@ Route::post('/delivery-issues', [DeliveryIssueController::class, 'store'])->name
 // Route para sa Edit/Update modal
 Route::put('/delivery-issues/{id}', [DeliveryIssueController::class, 'update'])->name('delivery-issues.update');
 
-Route::prefix('receipts')->name('receipts.')->group(function () {
-
-
-    Route::get('/',
-        [GoodsReceiptController::class, 'index'])
-        ->name('index');
-
-
-    Route::get('/delivery-issues',
-        [DeliveryIssueController::class, 'index'])
-        ->name('delivery');
-
-
-    Route::get('/three-way-matching',
-        [GoodsReceiptController::class, 'threeWayMatching'])
-        ->name('threeway');
-
-
-    Route::get('/payment-validation',
-        [GoodsReceiptController::class, 'paymentValidation'])
-        ->name('payment');
-
-
-    Route::put('/receipts/{receipt}/approve', [GoodsReceiptController::class, 'approve'])->name('receipts.approve');
-
-
-    Route::get('/{id}/edit',
-        [GoodsReceiptController::class, 'edit'])
-        ->name('edit');
-
-
-    Route::put('/{id}',
-        [GoodsReceiptController::class, 'update'])
-        ->name('update');
-
-
-    Route::get('/view/{id}',
-        [GoodsReceiptController::class, 'show'])
-        ->name('view');
-
-});
-
-
-
-// Goods Receipt Routes (Naayos na at tinanggal ang duplicate)
+// Goods Receipt Routes
 Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
+    Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
     Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
     Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
     Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
     Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
-    
     Route::get('/{id}/edit', [GoodsReceiptController::class, 'edit'])->name('edit');
     Route::put('/{id}', [GoodsReceiptController::class, 'update'])->name('update');
-    
-    // Naka-ayos na para sumalo sa /receipts/{id} fetch request ng frontend modal mo
+    Route::get('/{id}/details', [GoodsReceiptController::class, 'details'])->name('details');
     Route::get('/{id}', [GoodsReceiptController::class, 'show'])->name('view');
 });
 

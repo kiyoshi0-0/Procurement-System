@@ -53,9 +53,9 @@
         <div class="bg-[#FCE7F3] rounded-2xl p-6 border border-pink-200/60 shadow-md flex items-start justify-between">
             <div class="space-y-2">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Spending</span>
-                <h3 class="text-2xl font-bold text-slate-800">PHP 30,910</h3>
+                <h3 class="text-2xl font-bold text-slate-800">₱{{ number_format($totalSpending, 2) }}</h3>
                 <p class="text-xs font-semibold text-rose-500 flex items-center gap-1">
-                    <span>+ PHP 1,340 this week</span>
+                    <span>Live spend total</span>
                 </p>
             </div>
             <div class="bg-[#EF4444] p-3 rounded-xl text-white shadow-inner">
@@ -66,9 +66,9 @@
         <div class="bg-[#FEF3C7] rounded-2xl p-6 border border-amber-200/60 shadow-md flex items-start justify-between">
             <div class="space-y-2">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Purchase Orders</span>
-                <h3 class="text-2xl font-bold text-slate-800">23</h3>
+                <h3 class="text-2xl font-bold text-slate-800">{{ $purchaseOrdersCount }}</h3>
                 <p class="text-xs font-semibold text-[#0284C7] flex items-center gap-1">
-                    <span>+8% vs last period</span>
+                    <span>Live PO count</span>
                 </p>
             </div>
             <div class="bg-[#D97706] p-3 rounded-xl text-white shadow-inner">
@@ -79,9 +79,9 @@
         <div class="bg-[#F3E8FF] rounded-2xl p-6 border border-purple-200/60 shadow-md flex items-start justify-between">
             <div class="space-y-2">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Invoices Matched</span>
-                <h3 class="text-2xl font-bold text-slate-800">38</h3>
+                <h3 class="text-2xl font-bold text-slate-800">{{ $invoicesMatched }}</h3>
                 <p class="text-xs font-medium text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-md inline-block">
-                    verified by Rojas
+                    Live match total
                 </p>
             </div>
             <div class="bg-[#8B5CF6] p-3 rounded-xl text-white shadow-inner">
@@ -92,9 +92,9 @@
         <div class="bg-[#DCFCE7] rounded-2xl p-6 border border-emerald-200/60 shadow-md flex items-start justify-between">
             <div class="space-y-2">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Department Count</span>
-                <h3 class="text-2xl font-bold text-slate-800">10</h3>
+                <h3 class="text-2xl font-bold text-slate-800">{{ $departmentCount }}</h3>
                 <p class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                    <span>No issues tracked</span>
+                    <span>Departments in requests</span>
                 </p>
             </div>
             <div class="bg-[#5B8FB9] p-3 rounded-xl text-white shadow-inner">
@@ -245,18 +245,9 @@
             </div>
 
             <div class="flex justify-center my-6 relative">
-                <svg class="w-48 h-48" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3"></circle>
-
-                    <circle class="donut-segment" cx="18" cy="18" r="15.915" fill="none" stroke="#727CA3" stroke-width="3"
-                        stroke-dasharray="60 40" stroke-dashoffset="100"></circle>
-                    <circle class="donut-segment" cx="18" cy="18" r="15.915" fill="none" stroke="#AAB06C" stroke-width="3"
-                        stroke-dasharray="25 75" stroke-dashoffset="40"></circle>
-                    <circle class="donut-segment" cx="18" cy="18" r="15.915" fill="none" stroke="#B44A4A" stroke-width="3"
-                        stroke-dasharray="15 85" stroke-dashoffset="15"></circle>
-                </svg>
+                <canvas id="poDistributionChart" class="w-48 h-48"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-3xl font-black text-slate-800">23</span>
+                    <span class="text-3xl font-black text-slate-800">{{ $purchaseOrdersCount }}</span>
                     <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total POs</span>
                 </div>
             </div>
@@ -267,21 +258,21 @@
                         <span class="inline-block w-3 h-3 rounded-full bg-[#6F79A8]"></span>
                         <span>Delivered</span>
                     </div>
-                    <span class="text-base font-bold text-slate-800">14</span>
+                    <span class="text-base font-bold text-slate-800">{{ $chartData['delivered'] }}</span>
                 </div>
                 <div>
                     <div class="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
                         <span class="inline-block w-3 h-3 rounded-full bg-[#A7AD57]"></span>
                         <span>Pending</span>
                     </div>
-                    <span class="text-base font-bold text-slate-800">06</span>
+                    <span class="text-base font-bold text-slate-800">{{ $chartData['pending'] }}</span>
                 </div>
                 <div>
                     <div class="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
                         <span class="inline-block w-3 h-3 rounded-full bg-[#C4524D]"></span>
                         <span>Cancelled</span>
                     </div>
-                    <span class="text-base font-bold text-slate-800">03</span>
+                    <span class="text-base font-bold text-slate-800">{{ $chartData['cancelled'] }}</span>
                 </div>
             </div>
         </div>
@@ -526,6 +517,37 @@
         // CHART RENDERING ENGINE (CHART.JS)
         // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
+            const poDistributionCounts = @json(array_values($chartData));
+            const ctxPoDistribution = document.getElementById('poDistributionChart').getContext('2d');
+            new Chart(ctxPoDistribution, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Delivered', 'Pending', 'Cancelled'],
+                    datasets: [{
+                        data: poDistributionCounts,
+                        backgroundColor: ['#727CA3', '#AAB06C', '#B44A4A'],
+                        borderWidth: 0,
+                        cutout: '72%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const total = poDistributionCounts.reduce((sum, value) => sum + value, 0);
+                                    const percent = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${context.raw} (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
             // --- 1. Category Spending (Vibrant Rounded Doughnut) ---
             const ctxCategory = document.getElementById('categoryDoughnutChart').getContext('2d');
             new Chart(ctxCategory, {

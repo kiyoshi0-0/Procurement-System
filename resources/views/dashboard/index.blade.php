@@ -92,23 +92,35 @@
                 <h3 class="text-base font-bold text-gray-900">Purchase Status</h3>
             </div>
             <div class="flex items-center h-full">
-                <!-- Custom Left Legends -->
-                <div class="space-y-3 w-1/2 pr-2">
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-delivered inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Delivered</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-pending inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Pending</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-cancelled inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Cancelled</span>
-                    </div>
-                </div>
                 <div class="w-1/2 h-36 relative flex items-center justify-center">
                     <canvas id="statusChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-3xl font-bold text-slate-900">{{ $purchaseOrdersCount }}</span>
+                        <span class="text-[11px] uppercase tracking-[0.24em] text-gray-500">Total POs</span>
+                    </div>
+                </div>
+                <div class="space-y-4 w-1/2 pl-4">
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-delivered inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Delivered</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['delivered'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-pending inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Pending</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['pending'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-cancelled inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Cancelled</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['cancelled'] }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,13 +128,22 @@
         <!-- Vertical Feed List: Recent Activity -->
         <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 lg:col-span-3 flex flex-col">
             <h3 class="text-base font-bold text-gray-900 mb-5">Recent Activity</h3>
-            <div class="relative border-l-2 border-brand-green ml-16 space-y-5 flex-1 max-h-47.5 pr-1">
-                <div class="relative pl-6">
-                    <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
-                    <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ now()->format('H:i') }}</span>
-                    <h4 class="text-xs font-bold text-gray-900 leading-tight">System Synchronized</h4>
-                    <p class="text-[10px] text-gray-400 font-medium">Dashboard Active</p>
-                </div>
+            <div class="relative border-l-2 border-brand-green ml-16 space-y-5 flex-1 max-h-47.5 pr-1 overflow-y-auto">
+                @forelse($activityLogs as $log)
+                    <div class="relative pl-6">
+                        <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
+                        <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ $log->created_at->format('H:i') }}</span>
+                        <h4 class="text-xs font-bold text-gray-900 leading-tight">{{ $log->activity }}</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">{{ $log->details }}</p>
+                    </div>
+                @empty
+                    <div class="relative pl-6">
+                        <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
+                        <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ now()->format('H:i') }}</span>
+                        <h4 class="text-xs font-bold text-gray-900 leading-tight">No recent activity</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">Activity feed will appear here when actions occur.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
@@ -314,16 +335,18 @@
             }
         });
 
-        // Initialize Purchase Order Status Pie Chart Graphic Elements
+        // Initialize Purchase Order Status Doughnut Chart Graphic Elements
+        const statusCounts = @json(array_values($chartData));
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         new Chart(ctxStatus, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: ['Delivered', 'Pending', 'Cancelled'],
                 datasets: [{
-                    data: [71.43, 20.41, 8.16],
+                    data: statusCounts,
                     backgroundColor: ['#727CA3', '#AAB06C', '#B44A4A'],
-                    borderWidth: 0
+                    borderWidth: 0,
+                    cutout: '70%'
                 }]
             },
             options: {
@@ -332,7 +355,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        callbacks: { label: (context) => ` ${context.label}: ${context.raw}%` }
+                        callbacks: {
+                            label: (context) => {
+                                const total = statusCounts.reduce((sum, value) => sum + value, 0);
+                                const percent = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${context.raw} (${percent}%)`;
+                            }
+                        }
                     }
                 }
             }

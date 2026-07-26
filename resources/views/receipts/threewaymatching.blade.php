@@ -27,21 +27,21 @@
         <div class="bg-white rounded-xl shadow p-5 border">
             <p class="text-sm text-slate-500">Matched</p>
             <h2 class="text-3xl font-bold text-green-600">
-                {{ $receipts->where('match_status','MATCHED')->count() }}
+                {{ $receipts->where('effective_match_status','MATCHED')->count() }}
             </h2>
         </div>
 
         <div class="bg-white rounded-xl shadow p-5 border">
             <p class="text-sm text-slate-500">Qty Mismatch</p>
             <h2 class="text-3xl font-bold text-red-600">
-                {{ $receipts->where('match_status','QTY MISMATCH')->count() }}
+                {{ $receipts->where('effective_match_status','QTY MISMATCH')->count() }}
             </h2>
         </div>
 
         <div class="bg-white rounded-xl shadow p-5 border">
             <p class="text-sm text-slate-500">Price Mismatch</p>
             <h2 class="text-3xl font-bold text-yellow-500">
-                {{ $receipts->where('match_status','PRICE MISMATCH')->count() }}
+                {{ $receipts->where('effective_match_status','PRICE MISMATCH')->count() }}
             </h2>
         </div>
 
@@ -159,24 +159,30 @@
             </div>
 
             <div>
+                    @php $effectiveStatus = $receipt->effective_match_status; @endphp
 
-                @if($receipt->match_status=="MATCHED")
+                    @if($effectiveStatus=="MATCHED")
 
-                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                        MATCHED
-                    </span>
+                        <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                            MATCHED
+                        </span>
 
-                @elseif($receipt->match_status=="PRICE MISMATCH")
+                    @elseif($effectiveStatus=="PRICE MISMATCH")
 
-                    <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">
-                        PRICE MISMATCH
-                    </span>
+                        <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">
+                            PRICE MISMATCH
+                        </span>
 
-                @else
+                    @elseif($effectiveStatus=="QTY MISMATCH")
 
-                    <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
-                        QTY MISMATCH
-                    </span>
+                        <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                            QTY MISMATCH
+                        </span>
+
+                    @else
+
+                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                            {{ $effectiveStatus }}
 
                 @endif
 
@@ -245,7 +251,7 @@
                 </p>
 
                 <h2 class="text-4xl font-black mt-2">
-                    {{ $receipts->where('match_status','!=','MATCHED')->count() }}
+                    {{ $receipts->filter(fn($receipt) => $receipt->effective_match_status !== 'MATCHED')->count() }}
                 </h2>
             </div>
 
@@ -391,20 +397,20 @@
                     </td>
 
                     <td class="px-5 py-4 text-center">
-
-                        @if($receipt->match_status=="MATCHED")
+                        @php $effectiveStatus = $receipt->effective_match_status; @endphp
+                        @if($effectiveStatus=="MATCHED")
 
                             <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
                                 MATCHED
                             </span>
 
-                        @elseif($receipt->match_status=="PRICE MISMATCH")
+                        @elseif($effectiveStatus=="PRICE MISMATCH")
 
                             <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">
                                 PRICE MISMATCH
                             </span>
 
-                        @elseif($receipt->match_status=="QTY MISMATCH")
+                        @elseif($effectiveStatus=="QTY MISMATCH")
 
                             <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">
                                 QTY MISMATCH
@@ -421,17 +427,10 @@
                     </td>
 
                     <td class="px-5 py-4 text-center">
-
-                       <button
-onclick="viewDetails({{ $receipt->id }})"
-class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold">
-
-<i class="fa-solid fa-eye mr-1"></i>
-
-View Details
-
-</button>   
-
+                        <a href="{{ route('receipts.details', $receipt->id) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center">
+                            <i class="fa-solid fa-eye mr-1"></i>
+                            View Details
+                        </a>
                     </td>
 
                 </tr>

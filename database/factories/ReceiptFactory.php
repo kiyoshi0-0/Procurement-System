@@ -20,6 +20,9 @@ class ReceiptFactory extends Factory
         $hasDiscrepancy = $this->faker->boolean(30); // 30% chance na magka-issue
         $grQty = $hasDiscrepancy ? $poQty - $this->faker->numberBetween(1, 5) : $poQty;
 
+        $poPrice = $this->faker->randomFloat(2, 1000, 25000);
+        $invoicePrice = $hasDiscrepancy ? $poPrice + $this->faker->randomFloat(2, 1, 2500) : $poPrice;
+
         return [
             'gr_number' => 'GR-' . strtoupper($this->faker->bothify('#####')),
             'po_number' => $poNumber,
@@ -35,7 +38,9 @@ class ReceiptFactory extends Factory
             'gr_quantity' => $grQty,
             'warehouse' => $this->faker->randomElement(['Main Warehouse', 'North Depot', 'South Hub']),
             'inspection_status' => $hasDiscrepancy ? 'Failed' : 'Passed',
-            'match_status' => $hasDiscrepancy ? 'Discrepancy Found' : 'Matched',
+            'po_price' => $poPrice,
+            'invoice_price' => $invoicePrice,
+            'match_status' => $hasDiscrepancy ? 'PRICE MISMATCH' : 'MATCHED',
             'approved_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ];
     }

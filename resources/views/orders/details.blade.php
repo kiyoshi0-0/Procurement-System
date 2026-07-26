@@ -145,19 +145,23 @@
         <div class="lg:col-span-3 space-y-6">
             <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs space-y-2.5">
                 @if(strtolower($po->status) === 'sent')
-                    <a href="{{ route('orders.print', $po->po_number) }}" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Re-print</a>
-                @else
+                    <a href="{{ route('orders.print', $po->id) }}" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Re-print</a>
+                @elseif(strtolower($po->status) !== 'delivered')
                     <form action="{{ route('orders.send', $po->id) }}" method="POST" class="m-0">
                         @csrf
                         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 text-center block">Send to Supplier</button>
                     </form>
                 @endif
-                <a href="{{ route('orders.supplier', $po->po_number) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Supplier Preview</a>
-                <a href="{{ route('orders.edit', $po->id) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Revise</a>
-                <form action="{{ route('orders.cancel', $po->id) }}" method="POST" class="pt-1">
-                    @csrf
-                    <button type="submit" class="w-full bg-white hover:bg-rose-50 text-rose-600 border border-rose-200/80 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center cursor-pointer">Cancel Order</button>
-                </form>
+
+                <a href="{{ route('orders.supplier', $po->id) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Supplier Preview</a>
+
+                @if(strtolower($po->status) !== 'delivered')
+                    <a href="{{ route('orders.edit', $po->id) }}" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center block">Revise</a>
+                    <form action="{{ route('orders.cancel', $po->id) }}" method="POST" class="pt-1">
+                        @csrf
+                        <button type="submit" class="w-full bg-white hover:bg-rose-50 text-rose-600 border border-rose-200/80 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-center cursor-pointer">Cancel Order</button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>

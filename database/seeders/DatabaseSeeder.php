@@ -14,12 +14,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-        SupplierSeeder::class,
-        ContractSeeder::class,
-        PurchaseRequestSeeder::class,
-
-    GoodsReceiptSeeder::class,  // Sunod ang Goods Receipt para may paghugutan ito
-]);
+            SupplierSeeder::class,
+            ContractSeeder::class,
+            PurchaseRequestSeeder::class,
+            PurchaseOrderSeeder::class,
+            GoodsReceiptSeeder::class,  // Sunod ang Goods Receipt para may paghugutan ito
+        ]);
 
         // Get all suppliers sorted by ID
         $supplierIds = Supplier::orderBy('id')->pluck('id')->toArray();

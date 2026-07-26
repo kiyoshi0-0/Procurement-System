@@ -20,8 +20,10 @@ class PurchaseOrderController extends Controller
         PurchaseRequest::syncApprovedRequestsToPurchaseOrders();
 
         $purchaseOrders = PurchaseOrder::with(['supplier', 'items'])->get();
+
         return view('orders.list', compact('purchaseOrders'));
     }
+
     public function create()
     {
         $suppliers = Supplier::all();
@@ -111,11 +113,10 @@ class PurchaseOrderController extends Controller
     /**
      * Display the specified purchase order details.
      */
-    public function show($po_number)
+    public function show($id)
     {
         $po = PurchaseOrder::with(['supplier', 'items'])
-            ->where('po_number', $po_number)
-            ->firstOrFail();
+            ->findOrFail($id);
 
         return view('orders.details', compact('po'));
     }
@@ -205,13 +206,11 @@ class PurchaseOrderController extends Controller
         // Ibalik ang edit view kasama ang PO data
         return view('orders.edit', compact('po', 'suppliers'));
     }
-    public function print($poNumber)
+    public function print($id)
     {
-        // Hanapin ang PO gamit ang po_number string
-        $po = PurchaseOrder::where('po_number', $poNumber)->with('items')->firstOrFail();
-        
-        // I-return ang view at ipasa ang $po object
-        return view('orders.print', compact('po')); 
+        $po = PurchaseOrder::with(['items', 'supplier'])->findOrFail($id);
+
+        return view('orders.print', compact('po'));
     }
     public function sendToSupplier($id)
     {
@@ -225,15 +224,13 @@ class PurchaseOrderController extends Controller
             'user_name' => 'Admin'
         ]);
 
-        return redirect()->route('orders.supplier', $po->po_number)->with('success', 'Purchase Order sent to supplier.');
+        return redirect()->route('orders.supplier', $po->id)->with('success', 'Purchase Order sent to supplier.');
     }
 
-    public function supplierPreview($poNumber)
+    public function supplierPreview($id)
     {
-        // Hanapin ang PO sa database kasama ang mga items nito at supplier
-        $po = PurchaseOrder::where('po_number', $poNumber)->with(['items', 'supplier'])->firstOrFail();
-        
-        // I-pass ang $po sa supplier.blade.php
+        $po = PurchaseOrder::with(['items', 'supplier'])->findOrFail($id);
+
         return view('orders.supplier', compact('po'));
     }
 }

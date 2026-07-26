@@ -62,7 +62,7 @@
         <!-- Action Buttons -->
         <div class="flex gap-4 pt-4 border-t border-gray-100">
             <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition">Update PO</button>
-            <a href="{{ route('orders.details', $po->po_number) }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition">Cancel</a>
+            <a href="{{ route('orders.details', $po->id) }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition">Cancel</a>
         </div>
     </form>
 </section>

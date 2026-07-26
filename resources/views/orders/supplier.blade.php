@@ -6,7 +6,7 @@
         
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
             <h1 class="text-xl font-bold text-gray-900 tracking-tight">Supplier Print Preview</h1>
-            <a href="{{ route('orders.details', $po->po_number) }}" class="text-gray-400 hover:text-gray-600 text-sm font-semibold">✕ Close Preview</a>
+            <a href="{{ route('orders.details', $po->id) }}" class="text-gray-400 hover:text-gray-600 text-sm font-semibold">✕ Close Preview</a>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -114,7 +114,7 @@
                     <a href="mailto:{{ $po->supplier->email ?? '' }}?subject={{ urlencode('Purchase Order ' . $po->po_number) }}&body={{ urlencode('Hello,%0D%0APlease find attached Purchase Order ' . $po->po_number . '.%0D%0A%0D%0AThank you,%0D%0A' . ($po->supplier->name ?? '')) }}" class="w-full inline-flex justify-center items-center bg-[#00b074] text-white font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-emerald-600 transition shadow-sm">
                         Send via Email
                     </a>
-                    <a href="{{ route('orders.details', $po->po_number) }}" class="w-full inline-flex justify-center items-center bg-white border border-gray-300 py-2.5 px-4 rounded-xl text-xs hover:bg-gray-50 text-gray-700 font-semibold transition shadow-sm">
+                    <a href="{{ route('orders.details', $po->id) }}" class="w-full inline-flex justify-center items-center bg-white border border-gray-300 py-2.5 px-4 rounded-xl text-xs hover:bg-gray-50 text-gray-700 font-semibold transition shadow-sm">
                         Back to PO Details
                     </a>
                 </div>

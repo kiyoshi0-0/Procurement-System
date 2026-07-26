@@ -113,11 +113,13 @@
                     </span>
                 </td>
                 <td class="px-5 py-4">
+                    @php $status = $receipt->effective_match_status; @endphp
                     <span class="px-3 py-1 text-xs font-semibold rounded-full
-                    @if($receipt->match_status=='MATCHED') bg-green-100 text-green-700
-                    @elseif($receipt->match_status=='PRICE MISMATCH') bg-yellow-100 text-yellow-700
-                    @else bg-red-100 text-red-700 @endif">
-                    {{ $receipt->match_status }}
+                    @if($status=='MATCHED') bg-green-100 text-green-700
+                    @elseif($status=='PRICE MISMATCH') bg-yellow-100 text-yellow-700
+                    @elseif($status=='QTY MISMATCH') bg-red-100 text-red-700
+                    @else bg-slate-100 text-slate-700 @endif">
+                    {{ $status }}
                     </span>
                 </td>
                 <td class="px-5 py-4">
@@ -175,6 +177,14 @@
           <input type="text" id="edit_warehouse" name="warehouse" class="w-full border rounded p-2" />
         </div>
         <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">PO Unit Price</label>
+          <input type="number" step="0.01" id="edit_po_price" name="po_price" class="w-full border rounded p-2" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Invoice Price</label>
+          <input type="number" step="0.01" id="edit_invoice_price" name="invoice_price" class="w-full border rounded p-2" />
+        </div>
+        <div>
           <label class="block text-xs font-medium text-slate-500 mb-1">Inspection</label>
           <select id="edit_inspection_status" name="inspection_status" class="w-full border rounded p-2">
             <option value="Passed">Passed</option>
@@ -183,12 +193,8 @@
           </select>
         </div>
         <div class="col-span-2">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Match Status</label>
-          <select id="edit_match_status" name="match_status" class="w-full border rounded p-2">
-            <option value="MATCHED">MATCHED</option>
-            <option value="QTY MISMATCH">QTY MISMATCH</option>
-            <option value="PRICE MISMATCH">PRICE MISMATCH</option>
-          </select>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Computed Match Status</label>
+          <input type="text" id="edit_computed_match_status" class="w-full border rounded p-2 bg-slate-100" readonly />
         </div>
       </div>
       <div class="mt-6 flex justify-end gap-2">
@@ -256,7 +262,7 @@ function openReceiptModal(id) {
                 <div><p class="text-xs text-slate-400">Ordered</p>${data.po_quantity ?? '-'}</div>
                 <div><p class="text-xs text-slate-400">Received</p>${data.gr_quantity ?? '-'}</div>
                 <div><p class="text-xs text-slate-400">Warehouse</p>${data.warehouse ?? '-'}</div>
-                <div><p class="text-xs text-slate-400">Match</p>${data.match_status ?? '-'}</div>
+                <div><p class="text-xs text-slate-400">Match</p>${data.effective_match_status ?? data.match_status ?? '-'}</div>
             </div>`;
         })
         .catch(error => console.log(error));
@@ -275,7 +281,7 @@ function openEditModal(id) {
     modal.classList.add('flex');
 
     // Siguraduhing kasama ang ID sa URL patungong update route
-    fetch('/goods-receipt/' + id + '/edit')
+    fetch('/receipts/' + id + '/edit')
         .then(response => response.json())
         .then(data => {
             document.getElementById('edit_supplier').value = data.supplier ?? '';
@@ -283,11 +289,14 @@ function openEditModal(id) {
             document.getElementById('edit_po_quantity').value = data.po_quantity ?? '';
             document.getElementById('edit_gr_quantity').value = data.gr_quantity ?? '';
             document.getElementById('edit_warehouse').value = data.warehouse ?? '';
+            document.getElementById('edit_po_price').value = data.po_price ?? '';
+            document.getElementById('edit_invoice_price').value = data.invoice_price ?? '';
             document.getElementById('edit_inspection_status').value = data.inspection_status ?? 'Passed';
-            document.getElementById('edit_match_status').value = data.match_status ?? 'MATCHED';
+            document.getElementById('edit_computed_match_status').value = data.effective_match_status ?? data.match_status ?? 'PENDING';
             
             // Dito naise-set ang tamang action URL na may ID
-            document.getElementById('editReceiptForm').action = '/goods-receipt/' + id;
+            document.getElementById('editReceiptForm').action = '/receipts/' + id;
+            updateComputedMatchStatus();
         })
         .catch(error => console.error(error));
 }
@@ -296,6 +305,32 @@ function closeEditModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
+
+function updateComputedMatchStatus() {
+    const inspection = document.getElementById('edit_inspection_status').value;
+    const poQty = Number(document.getElementById('edit_po_quantity').value);
+    const grQty = Number(document.getElementById('edit_gr_quantity').value);
+    const poPrice = document.getElementById('edit_po_price').value;
+    const invoicePrice = document.getElementById('edit_invoice_price').value;
+
+    let status = 'MATCHED';
+    if (inspection !== 'Passed') {
+        status = 'PENDING';
+    } else if (!Number.isNaN(poQty) && !Number.isNaN(grQty) && poQty !== grQty) {
+        status = 'QTY MISMATCH';
+    } else if (poPrice !== '' && invoicePrice !== '' && Number(poPrice).toFixed(2) !== Number(invoicePrice).toFixed(2)) {
+        status = 'PRICE MISMATCH';
+    }
+
+    document.getElementById('edit_computed_match_status').value = status;
+}
+
+['edit_po_quantity','edit_gr_quantity','edit_po_price','edit_invoice_price','edit_inspection_status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('change', updateComputedMatchStatus);
+    }
+});
 
 // Signature Canvas Logic
 let canvas = document.getElementById("signatureCanvas");

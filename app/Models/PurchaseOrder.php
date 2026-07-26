@@ -26,4 +26,13 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PurchaseOrderItem::class);
     }
+
+    public function receipts()
+    {
+        return $this->hasMany(
+            \App\Models\Receipt::class,
+            'po_number',
+            'po_number'
+        );
+    }
 }

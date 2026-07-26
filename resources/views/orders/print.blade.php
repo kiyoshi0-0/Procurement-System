@@ -10,7 +10,7 @@
             </div>
             <div class="space-y-2 text-right">
                 <button onclick="window.print()" class="inline-flex items-center justify-center bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-700 transition">Print</button>
-                <a href="{{ route('orders.details', $po->po_number) }}" class="inline-flex items-center justify-center bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 transition">Back to Details</a>
+                <a href="{{ route('orders.details', $po->id) }}" class="inline-flex items-center justify-center bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 transition">Back to Details</a>
             </div>
         </div>
 

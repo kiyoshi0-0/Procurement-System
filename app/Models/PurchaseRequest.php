@@ -33,17 +33,20 @@ class PurchaseRequest extends Model
                     ?? Supplier::inRandomOrder()->value('id')
                     ?? 1;
 
-                $purchaseOrder = PurchaseOrder::create([
-                    'po_number' => $poNumber,
-                    'date' => now()->toDateString(),
-                    'supplier_id' => $supplierId,
-                    'status' => 'Confirmed',
-                    'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
-                ]);
+                $purchaseOrder = PurchaseOrder::firstOrCreate(
+                    ['po_number' => $poNumber],
+                    [
+                        'date' => now()->toDateString(),
+                        'supplier_id' => $supplierId,
+                        'status' => 'Confirmed',
+                        'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
+                    ]
+                );
 
-                PurchaseOrderItem::create([
+                PurchaseOrderItem::firstOrCreate([
                     'purchase_order_id' => $purchaseOrder->id,
                     'name' => $purchaseRequest->item_name,
+                ], [
                     'qty' => $purchaseRequest->qty,
                     'price' => $purchaseRequest->price ?? 0,
                 ]);
@@ -71,20 +74,30 @@ class PurchaseRequest extends Model
                     ?? Supplier::inRandomOrder()->value('id')
                     ?? 1;
 
-                $purchaseOrder = PurchaseOrder::create([
-                    'po_number' => $poNumber,
-                    'date' => now()->toDateString(),
-                    'supplier_id' => $supplierId,
-                    'status' => 'Confirmed',
-                    'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
-                ]);
+                try {
+                    $purchaseOrder = PurchaseOrder::firstOrCreate(
+                        ['po_number' => $poNumber],
+                        [
+                            'date' => now()->toDateString(),
+                            'supplier_id' => $supplierId,
+                            'status' => 'Confirmed',
+                            'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
+                        ]
+                    );
 
-                PurchaseOrderItem::create([
-                    'purchase_order_id' => $purchaseOrder->id,
-                    'name' => $purchaseRequest->item_name,
-                    'qty' => $purchaseRequest->qty,
-                    'price' => $purchaseRequest->price ?? 0,
-                ]);
+                    PurchaseOrderItem::firstOrCreate([
+                        'purchase_order_id' => $purchaseOrder->id,
+                        'name' => $purchaseRequest->item_name,
+                    ], [
+                        'qty' => $purchaseRequest->qty,
+                        'price' => $purchaseRequest->price ?? 0,
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                        return;
+                    }
+                    throw $e;
+                }
             }
         };
 

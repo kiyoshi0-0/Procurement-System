@@ -33,11 +33,12 @@
         @endif
       </td>
       <td class="px-5 py-4 text-center">
-        @if($receipt->match_status=="MATCHED")
+        @php $effectiveStatus = $receipt->effective_match_status; @endphp
+        @if($effectiveStatus=="MATCHED")
           <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">MATCHED</span>
-        @elseif($receipt->match_status=="PRICE MISMATCH")
+        @elseif($effectiveStatus=="PRICE MISMATCH")
           <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">PRICE MISMATCH</span>
-        @elseif($receipt->match_status=="QTY MISMATCH")
+        @elseif($effectiveStatus=="QTY MISMATCH")
           <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">QTY MISMATCH</span>
         @else
           <span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">PENDING</span>
@@ -62,7 +63,7 @@
 <script>
 function viewDetails(id) {
     if (confirm("Are you sure you want to view this 3-way matching?")) {
-        window.location.href = "/threewaymatching/details/" + id;
+        window.location.href = "/receipts/" + id + "/details";
     }
 }
 </script>
