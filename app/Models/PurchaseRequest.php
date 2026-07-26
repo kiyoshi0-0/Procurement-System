@@ -65,50 +65,67 @@ class PurchaseRequest extends Model
      * This acts as an automatic trigger every time a PurchaseRequest is touched.
      */
     protected static function booted(): void
-{
-    $syncToHistory = function ($purchaseRequest) {
-        if (strtolower($purchaseRequest->status) === 'approved') {
-            $poNumber = 'PO-2026-' . str_pad($purchaseRequest->id, 3, '0', STR_PAD_LEFT);
+    {
+        $syncApprovedData = function ($purchaseRequest) {
+            if (strtolower($purchaseRequest->status) === 'approved') {
+                $poNumber = 'PO-2026-' . str_pad($purchaseRequest->id, 3, '0', STR_PAD_LEFT);
 
-            // Avoid duplicate entries in the purchases table
-            if (Purchase::where('po_number', $poNumber)->exists()) {
-                return;
-            }
+                $supplierId = Supplier::where('name', $purchaseRequest->supplier)->value('id')
+                    ?? Supplier::inRandomOrder()->value('id')
+                    ?? 1;
 
-            // Map supplier name to supplier_id
-            $supplierId = Supplier::where('name', $purchaseRequest->supplier)->value('id')
-                ?? Supplier::inRandomOrder()->value('id')
-                ?? 1;
+                // 1. Sync to Purchases (History) table
+                if (!Purchase::where('po_number', $poNumber)->exists()) {
+                    $totalPrice = ($purchaseRequest->qty ?? 0) * ($purchaseRequest->price ?? 0);
 
-            $totalPrice = ($purchaseRequest->qty ?? 0) * ($purchaseRequest->price ?? 0);
+                    try {
+                        Purchase::firstOrCreate(
+                            ['po_number' => $poNumber],
+                            [
+                                'supplier_id' => $supplierId,
+                                'item_name' => $purchaseRequest->item_name,
+                                'quantity' => $purchaseRequest->qty ?? 1,
+                                'total_price' => $totalPrice,
+                                'status' => 'Completed',
+                            ]
+                        );
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        if (!str_contains($e->getMessage(), 'Duplicate entry')) {
+                            throw $e;
+                        }
+                    }
+                }
 
-            try {
-                // Create the record in the purchases table using the Purchase model[cite: 2]
-                Purchase::firstOrCreate(
+                // 2. Sync to Purchase Orders table (Fixes the empty PO List)
+                $statuses = ['Confirmed', 'Delivered', 'Sent'];
+                $assignedStatus = $statuses[$purchaseRequest->id % count($statuses)];
+
+                $purchaseOrder = PurchaseOrder::firstOrCreate(
                     ['po_number' => $poNumber],
                     [
+                        'date' => now()->toDateString(),
                         'supplier_id' => $supplierId,
-                        'item_name' => $purchaseRequest->item_name,
-                        'quantity' => $purchaseRequest->qty ?? 1,
-                        'total_price' => $totalPrice,
-                        'status' => 'Completed', // Matches your export/history query filter
+                        'status' => $assignedStatus,
+                        'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
                     ]
                 );
-            } catch (\Illuminate\Database\QueryException $e) {
-                if (str_contains($e->getMessage(), 'Duplicate entry')) {
-                    return;
-                }
-                throw $e;
+
+                PurchaseOrderItem::firstOrCreate([
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'name' => $purchaseRequest->item_name,
+                ], [
+                    'qty' => $purchaseRequest->qty,
+                    'price' => $purchaseRequest->price ?? 0,
+                ]);
             }
-        }
-    };
+        };
 
-    static::created($syncToHistory);
+        static::created($syncApprovedData);
 
-    static::updated(function ($purchaseRequest) use ($syncToHistory) {
-        if ($purchaseRequest->isDirty('status')) {
-            $syncToHistory($purchaseRequest);
-        }
-    });
-}
+        static::updated(function ($purchaseRequest) use ($syncApprovedData) {
+            if ($purchaseRequest->isDirty('status')) {
+                $syncApprovedData($purchaseRequest);
+            }
+        });
+    }
 }
