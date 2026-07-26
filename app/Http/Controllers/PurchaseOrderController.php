@@ -16,13 +16,12 @@ class PurchaseOrderController extends Controller
      * Show the form for creating a new purchase order.
      */
     public function list()
-    {
-        PurchaseRequest::syncApprovedRequestsToPurchaseOrders();
-
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'items'])->get();
-
-        return view('orders.list', compact('purchaseOrders'));
-    }
+{
+    // Eager load supplier and items to prevent N+1 issues and ensure live data sync
+    $purchaseOrders = PurchaseOrder::with(['supplier', 'items'])->latest()->get();
+    
+    return view('orders.list', compact('purchaseOrders'));
+}
 
     public function create()
     {

@@ -139,6 +139,7 @@
                                         </div>
                                     @endif
                                     <div>
+                                        <!-- Dynamically pulls the live updated supplier name -->
                                         <span class="font-semibold text-gray-800 block">{{ $po->supplier->name ?? 'No Supplier' }}</span>
                                     </div>
                                 </div>
@@ -196,7 +197,7 @@
         document.getElementById('metric-cancelled').innerText = r.filter(p => p.status.toLowerCase() === 'cancelled').length; 
     }
     function viewPoDetails(n) { window.location.href = `/orders/${n}`; }
-    const purchaseOrdersState = @json($purchaseOrders->keyBy('po_number'));
+    const purchaseOrdersState = @json($purchaseOrders->load('supplier')->keyBy('po_number'));
     let selectedStatusFilter = 'All';
     document.addEventListener('DOMContentLoaded', updateActiveMetricsCounter);
 </script>
