@@ -9,15 +9,19 @@ class Supplier extends Model
 {
     use HasFactory;
 
-    protected $fillable = 
-    ['name',
-     'address', 
-     'category', 
-     'contact_person', 
-     'phone', 'email', 
-     'payment_terms', 
-     'delivery_schedule', 
-     'rating'];
+    protected $fillable = [
+    'name',
+    'address', 
+    'category', 
+    'sub_categories', // <-- Add this
+    'status',         // <-- Add this
+    'contact_person', 
+    'phone', 
+    'email', 
+    'payment_terms', 
+    'delivery_schedule', 
+    'rating'
+];
 
     // In app/Models/Supplier.php
 
