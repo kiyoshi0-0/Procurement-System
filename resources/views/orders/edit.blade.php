@@ -35,22 +35,25 @@
                 <h3 class="text-xs font-bold text-gray-900 mb-4">LINE ITEMS CONTAINER</h3>
                 <div class="space-y-4">
                     @foreach($po->items as $index => $item)
-                    <div class="space-y-2">
+                    <div class="line-item-row space-y-2">
+                        <!-- Item ID required for controller update -->
+                        <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+
                         <label class="block text-[10px] font-bold text-gray-500 uppercase">Item Name</label>
                         <input type="text" name="items[{{ $index }}][name]" value="{{ $item->name }}" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
                         
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase">Qty</label>
-                                <input type="number" name="items[{{ $index }}][qty]" value="{{ $item->qty }}" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                                <input type="number" name="items[{{ $index }}][qty]" value="{{ $item->qty }}" class="item-qty w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase">Price</label>
-                                <input type="number" name="items[{{ $index }}][price]" value="{{ $item->price }}" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                                <input type="number" name="items[{{ $index }}][price]" value="{{ $item->price }}" class="item-price w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase">Amount</label>
-                                <input type="text" value="₱{{ number_format($item->qty * $item->price, 2) }}" class="w-full p-2 border border-gray-200 rounded-lg text-sm bg-gray-100 font-bold" disabled>
+                                <input type="text" value="₱{{ number_format($item->qty * $item->price, 2) }}" class="item-amount w-full p-2 border border-gray-200 rounded-lg text-sm bg-gray-100 font-bold" disabled>
                             </div>
                         </div>
                     </div>
@@ -66,4 +69,21 @@
         </div>
     </form>
 </section>
+
+<script>
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
+            const row = e.target.closest('.line-item-row');
+            if (row) {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = qty * price;
+                const amountInput = row.querySelector('.item-amount');
+                if (amountInput) {
+                    amountInput.value = '₱' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+        }
+    });
+</script>
 @endsection
