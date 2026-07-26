@@ -62,16 +62,15 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/orderhistory', [PurchaseOrderController::class, 'orderhistory'])->name('orderhistory');
     Route::get('/history', [PurchaseOrderController::class, 'history'])->name('history');
     
-    Route::get('/orders/{po_number}', [PurchaseOrderController::class, 'show'])->name('orders.details');
-    Route::get('/{poNumber}', [PurchaseOrderController::class, 'show'])->name('details');
     Route::get('/{id}/edit', [PurchaseOrderController::class, 'edit'])->name('edit');
-    
-    Route::get('/{poNumber}/print', [PurchaseOrderController::class, 'print'])->name('print');
-    Route::get('/{poNumber}/supplier', [PurchaseOrderController::class, 'supplierPreview'])->name('supplier');
+    Route::get('/{id}/print', [PurchaseOrderController::class, 'print'])->name('print');
+    Route::get('/{id}/supplier', [PurchaseOrderController::class, 'supplierPreview'])->name('supplier');
+    Route::get('/{id}', [PurchaseOrderController::class, 'show'])->name('details');
 
     // Actions
     Route::post('/store', [PurchaseOrderController::class, 'store'])->name('store');
     Route::put('/update/{id}', [PurchaseOrderController::class, 'update'])->name('update');
+    Route::post('/send/{id}', [PurchaseOrderController::class, 'sendToSupplier'])->name('send');
     Route::post('/cancel/{id}', [PurchaseOrderController::class, 'cancel'])->name('cancel');
     Route::delete('/delete/{id}', [PurchaseOrderController::class, 'destroy'])->name('destroy');
 });
@@ -102,6 +101,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
 
     Route::post('/run-matching', [GoodsReceiptController::class, 'runMatching'])->name('runMatching');
 // Halimbawa ng tamang Route para sa pag-update
+
 Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
     
@@ -117,6 +117,26 @@ Route::prefix('receipts')->name('receipts.')->group(function () {
     Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
     Route::get('/{id}/edit', [GoodsReceiptController::class, 'edit'])->name('edit');
     Route::put('/{id}', [GoodsReceiptController::class, 'update'])->name('update');
+
+Route::put('/goods-receipt/{id}', [GoodsReceiptController::class, 'update']);
+  
+    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
+Route::post('/delivery-issues', [DeliveryIssueController::class, 'store'])->name('delivery-issues.store');
+// Route para sa Edit/Update modal
+Route::put('/delivery-issues/{id}', [DeliveryIssueController::class, 'update'])->name('delivery-issues.update');
+
+// Goods Receipt Routes
+Route::prefix('receipts')->name('receipts.')->group(function () {
+    Route::get('/', [GoodsReceiptController::class, 'index'])->name('index');
+    Route::get('/delivery-issues', [DeliveryIssueController::class, 'index'])->name('delivery');
+    Route::patch('/delivery-issues/{id}/resolve', [DeliveryIssueController::class, 'resolve'])->name('delivery-issues.resolve');
+    Route::get('/three-way-matching', [GoodsReceiptController::class, 'threeWayMatching'])->name('threeway');
+    Route::get('/payment-validation', [GoodsReceiptController::class, 'paymentValidation'])->name('payment');
+    Route::put('/{id}/approve', [GoodsReceiptController::class, 'approve'])->name('approve');
+    Route::get('/{id}/edit', [GoodsReceiptController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [GoodsReceiptController::class, 'update'])->name('update');
+    Route::get('/{id}/details', [GoodsReceiptController::class, 'details'])->name('details');
+
     Route::get('/{id}', [GoodsReceiptController::class, 'show'])->name('view');
     Route::delete('/{id}', [GoodsReceiptController::class, 'destroy'])->name('destroy');
 });

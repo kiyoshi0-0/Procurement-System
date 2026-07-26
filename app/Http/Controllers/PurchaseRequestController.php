@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\PurchaseRequest;
 use Illuminate\Http\Request;
 
@@ -38,6 +39,8 @@ class PurchaseRequestController extends Controller
     ]);
 
         // 2. Loop sa items at i-save
+        $createdCount = 0;
+
         foreach ($request->items['name'] as $index => $name) {
             PurchaseRequest::create([
                 'requestor'     => $request->input('emp_name'), 
@@ -52,9 +55,15 @@ class PurchaseRequestController extends Controller
                 'qty'           => $request->items['qty'][$index],
                 'price'         => $request->items['price'][$index],
             ]);
+            $createdCount++;
         }
 
-        
+        ActivityLog::create([
+            'po_number' => 'Requestor: ' . $request->input('emp_name'),
+            'activity'  => 'Request Created',
+            'details'   => "Created purchase request for {$request->input('emp_name')} ({$request->input('emp_dept')}) with {$createdCount} item(s).",
+            'user_name' => auth()->check() ? auth()->user()->name : 'Admin',
+        ]);
 
         return redirect()->back()->with('success', 'Request saved!');
     }
@@ -66,6 +75,14 @@ class PurchaseRequestController extends Controller
         
         if ($request) {
             $request->delete();
+
+            ActivityLog::create([
+                'po_number' => 'Request #' . $id,
+                'activity'  => 'Request Deleted',
+                'details'   => "Deleted purchase request #{$id}.",
+                'user_name' => auth()->check() ? auth()->user()->name : 'Admin',
+            ]);
+
             return redirect()->back()->with('success', 'Request deleted successfully!');
         }
 
@@ -160,6 +177,13 @@ public function showApprovedRequests()
         $pr->status = $request->status;
         $pr->manager_comment = $request->comment;
         $pr->save();
+
+        ActivityLog::create([
+            'po_number' => 'Request #' . $id,
+            'activity'  => 'Request Status Updated',
+            'details'   => "Request #{$id} status changed to {$request->status}. Comment: {$request->comment}",
+            'user_name' => auth()->check() ? auth()->user()->name : 'Admin',
+        ]);
 
         return response()->json(['success' => true]);
     }

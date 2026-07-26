@@ -1,11 +1,12 @@
 @extends('layouts.app')
 
-<section id="supplier-view" class="view-panel space-y-6 max-w-7xl w-full mx-auto hidden">
+@section('content')
+<section id="supplier-view" class="view-panel space-y-6 max-w-7xl w-full mx-auto">
     <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 space-y-6">
         
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Live print-view preview</h1>
-            <button id="backToPoDetailsFromSupplierBtn" class="text-gray-400 hover:text-gray-600 text-sm font-semibold">✕ Close Preview</button>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Supplier Print Preview</h1>
+            <a href="{{ route('orders.details', $po->id) }}" class="text-gray-400 hover:text-gray-600 text-sm font-semibold">✕ Close Preview</a>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -13,29 +14,35 @@
             <div class="lg:col-span-8 border border-gray-300 rounded-xl p-8 space-y-8 bg-white shadow-sm">
                 <div class="flex justify-between items-start text-xs">
                     <div class="space-y-1">
-                        <h2 class="text-sm font-extrabold text-gray-900">ABC Company</h2>
-                        <p class="text-gray-500 leading-relaxed">Blk 51 Lot 12A,<br>Barangay. San Andres 1,<br>Dasmariñas, Cavite</p>
+                        <h2 class="text-sm font-extrabold text-gray-900">{{ $po->supplier->name ?? 'Supplier' }}</h2>
+                        <p class="text-gray-500 leading-relaxed">{{ $po->supplier->address ?? 'No address available' }}</p>
                     </div>
                     <div class="text-right space-y-1">
-                        <h2 id="supplierViewPoNum" class="text-2xl font-black text-gray-950">PO - 101</h2>
-                        <p class="text-gray-700 font-bold"><span class="text-gray-400 font-normal">Date:</span> <span id="supplierViewDate">June 28, 2026</span></p>
-                        <p class="text-gray-700 font-bold"><span class="text-gray-400 font-normal">Reference:</span> <span id="supplierViewRef">PO - 101</span></p>
+                        <h2 class="text-2xl font-black text-gray-950">{{ $po->po_number }}</h2>
+                        <p class="text-gray-700 font-bold"><span class="text-gray-400 font-normal">Date:</span> {{ \Carbon\Carbon::parse($po->date)->format('M d, Y') }}</p>
+                        <p class="text-gray-700 font-bold"><span class="text-gray-400 font-normal">Status:</span> {{ ucfirst($po->status) }}</p>
                     </div>
                 </div>
 
                 <hr class="border-gray-200">
 
+                @php
+                    $supplierSubtotal = $po->items->sum(fn($item) => $item->qty * $item->price);
+                    $supplierTax = 0;
+                    $supplierShipping = 0;
+                    $supplierTotal = $supplierSubtotal + $supplierTax + $supplierShipping;
+                @endphp
+
                 <div class="grid grid-cols-2 gap-8 text-xs">
                     <div class="space-y-1">
-                        <h3 class="font-extrabold text-gray-900 text-[13px]">Supplier:</h3>
-                        <p id="supplierViewCompName" class="text-gray-500">(Company NAME)</p>
-                        <p class="text-gray-500">Contract: Active Agreement</p>
-                        <p class="text-gray-700 font-semibold">Email: <span id="supplierViewEmail" class="font-normal text-gray-500">su*****23@yahoo.com</span></p>
-                        <p class="text-gray-700 font-semibold">Phone: <span id="supplierViewPhone" class="font-normal text-gray-500">09224238767</span></p>
+                        <h3 class="font-extrabold text-gray-900 text-[13px]">Supplier Contact</h3>
+                        <p class="text-gray-500">{{ $po->supplier->contact_person ?? 'Contact not set' }}</p>
+                        <p class="text-gray-700 font-semibold">Email: <span class="font-normal text-gray-500">{{ $po->supplier->email ?? 'N/A' }}</span></p>
+                        <p class="text-gray-700 font-semibold">Phone: <span class="font-normal text-gray-500">{{ $po->supplier->phone ?? 'N/A' }}</span></p>
                     </div>
                     <div class="space-y-1">
-                        <h3 class="font-extrabold text-gray-900 text-[13px]">Delivery Address:</h3>
-                        <p id="supplierViewDeliveryAddress" class="text-gray-500 leading-relaxed">Blk 51 Lot 12A,<br>Barangay. San Andres 1,<br>Dasmariñas, Cavite</p>
+                        <h3 class="font-extrabold text-gray-900 text-[13px]">Supplier Address:</h3>
+                        <p class="text-gray-500 leading-relaxed">{{ $po->supplier->address ?? 'N/A' }}</p>
                     </div>
                 </div>
 
@@ -50,8 +57,16 @@
                                 <th class="p-2.5 rounded-r-md border border-l-0 border-emerald-300 text-center">Total</th>
                             </tr>
                         </thead>
-                        <tbody id="supplierViewItemTable" class="text-gray-700 font-semibold">
-                            <!-- Dynamic content -->
+                        <tbody class="text-gray-700 font-semibold">
+                            @foreach($po->items as $index => $item)
+                                <tr class="bg-white hover:bg-gray-50 rounded-lg border shadow-sm">
+                                    <td class="p-2.5 border border-r-0 border-gray-200 rounded-l-lg text-gray-400">{{ $index + 1 }}</td>
+                                    <td class="p-2.5 border-y border-gray-200 text-center text-gray-600 font-bold">{{ $item->name }}</td>
+                                    <td class="p-2.5 border-y border-gray-200 text-center">{{ $item->qty }}</td>
+                                    <td class="p-2.5 border-y border-gray-200 text-center">₱{{ number_format($item->price, 2) }}</td>
+                                    <td class="p-2.5 border border-l-0 border-gray-200 rounded-r-lg text-center font-bold">₱{{ number_format($item->qty * $item->price, 2) }}</td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -62,10 +77,10 @@
                         <p class="text-gray-500">Thank you for your business!</p>
                     </div>
                     <div class="md:col-span-6 text-xs space-y-2">
-                        <div class="flex justify-between text-gray-500"><span>Subtotal</span><span id="supplierViewSubtotal" class="font-bold text-gray-800">₱150,000</span></div>
-                        <div class="flex justify-between text-gray-500"><span>Tax</span><span class="font-bold text-gray-800">₱0</span></div>
-                        <div class="flex justify-between text-gray-500 border-b pb-2"><span>Shipping</span><span class="font-bold text-gray-800">₱0</span></div>
-                        <div class="flex justify-between font-black text-sm text-gray-900 pt-1"><span>TOTAL</span><span id="supplierViewTotal">₱150,000</span></div>
+                        <div class="flex justify-between text-gray-500"><span>Subtotal</span><span id="supplierViewSubtotal" class="font-bold text-gray-800">₱{{ number_format($supplierSubtotal, 2) }}</span></div>
+                        <div class="flex justify-between text-gray-500"><span>Tax</span><span class="font-bold text-gray-800">₱{{ number_format($supplierTax, 2) }}</span></div>
+                        <div class="flex justify-between text-gray-500 border-b pb-2"><span>Shipping</span><span class="font-bold text-gray-800">₱{{ number_format($supplierShipping, 2) }}</span></div>
+                        <div class="flex justify-between font-black text-sm text-gray-900 pt-1"><span>TOTAL</span><span id="supplierViewTotal">₱{{ number_format($supplierTotal, 2) }}</span></div>
                     </div>
                 </div>
 
@@ -78,85 +93,33 @@
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-gray-800 block">Recipients</label>
                     <div class="border border-gray-300 rounded-xl p-3 bg-white text-xs space-y-1.5 text-gray-600 font-medium">
-                        <div class="flex items-center gap-1"><span class="text-gray-400">email:</span><span id="supplierEmailBox1">da***y@yahoo.com</span></div>
-                        <div class="flex items-center gap-1"><span class="text-gray-400">email:</span><span id="supplierEmailBox2">jo**a@gmail.com</span></div>
+                        <div class="flex items-center gap-1"><span class="text-gray-400">email:</span><span>{{ $po->supplier->email ?? 'N/A' }}</span></div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-gray-800 block">Subject</label>
-                    <input type="text" id="supplierEmailSubjectInput" value="Purchase Order PO - 101" class="w-full bg-white border border-gray-300 shadow-sm rounded-xl px-4 py-2 text-xs text-gray-700 font-semibold focus:outline-none">
+                    <input type="text" value="Purchase Order {{ $po->po_number }}" class="w-full bg-white border border-gray-300 shadow-sm rounded-xl px-4 py-2 text-xs text-gray-700 font-semibold focus:outline-none" readonly>
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-gray-800 block">Email Message</label>
                     <div class="w-full bg-white border border-gray-300 shadow-sm rounded-xl p-4 text-xs text-gray-600 space-y-4 leading-relaxed font-medium">
-                        <p>Hello,<br>Please find attached Purchase Order <span id="supplierEmailMsgPoNum">PO - 101</span>.</p>
-                        <p>Thank you,<br>ABC Company</p>
+                        <p>Hello,<br>Please find attached Purchase Order <strong>{{ $po->po_number }}</strong>.</p>
+                        <p>Thank you,<br>{{ $po->supplier->name ?? 'Supplier' }}</p>
                     </div>
                 </div>
 
                 <div class="space-y-2 pt-2">
-                    <button onclick="alert('Email dispatch successfully initiated!')" class="w-full bg-[#00b074] text-white font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-emerald-600 transition shadow-sm">
+                    <a href="mailto:{{ $po->supplier->email ?? '' }}?subject={{ urlencode('Purchase Order ' . $po->po_number) }}&body={{ urlencode('Hello,%0D%0APlease find attached Purchase Order ' . $po->po_number . '.%0D%0A%0D%0AThank you,%0D%0A' . ($po->supplier->name ?? '')) }}" class="w-full inline-flex justify-center items-center bg-[#00b074] text-white font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-emerald-600 transition shadow-sm">
                         Send via Email
-                    </button>
-                    <button onclick="alert('Downloading PDF instance...')" class="w-full bg-white border border-gray-300 py-2.5 px-4 rounded-xl text-xs hover:bg-gray-55 text-gray-700 font-semibold transition shadow-sm">
-                        Download PDF
-                    </button>
+                    </a>
+                    <a href="{{ route('orders.details', $po->id) }}" class="w-full inline-flex justify-center items-center bg-white border border-gray-300 py-2.5 px-4 rounded-xl text-xs hover:bg-gray-50 text-gray-700 font-semibold transition shadow-sm">
+                        Back to PO Details
+                    </a>
                 </div>
             </div>
-
         </div>
     </div>
 </section>
-
-
-
-<script>
-function viewSupplierPreview(poNum) {
-   const po = purchaseOrdersState[poNum];
-   if(!po) return;
-
-   const supData = suppliersMockData[po.supplier] || { contact: "N/A", email: "N/A", phone: "N/A", address: "N/A" };
-
-   document.getElementById('supplierViewPoNum').innerText = poNum;
-   document.getElementById('supplierViewRef').innerText = poNum;
-   document.getElementById('supplierViewCompName').innerText = po.supplier;
-   document.getElementById('supplierViewEmail').innerText = supData.email;
-   document.getElementById('supplierViewPhone').innerText = supData.phone;
-   document.getElementById('supplierViewDeliveryAddress').innerText = po.delivery_address;
-   
-   const printTable = document.getElementById('supplierViewItemTable');
-   printTable.innerHTML = '';
-   let subtotal = 0;
-   
-   po.items.forEach((item, index) => {
-     const lineTotal = item.qty * item.price;
-     subtotal += lineTotal;
-     
-     const tr = document.createElement('tr');
-     tr.className = "bg-white hover:bg-gray-50 rounded-lg border shadow-sm";
-     tr.innerHTML = `
-       <td class="p-2.5 border border-r-0 border-gray-200 rounded-l-lg text-gray-400">${index + 1}</td>
-       <td class="p-2.5 border-y border-gray-200 text-center text-gray-600 font-bold">${item.name}</td>
-       <td class="p-2.5 border-y border-gray-200 text-center">${item.qty}</td>
-       <td class="p-2.5 border-y border-gray-200 text-center">₱${parseFloat(item.price).toLocaleString()}</td>
-       <td class="p-2.5 border border-l-0 border-gray-200 rounded-r-lg text-center font-bold">₱${lineTotal.toLocaleString()}</td>
-     `;
-     printTable.appendChild(tr);
-   });
-
-   document.getElementById('supplierViewSubtotal').innerText = `₱${subtotal.toLocaleString()}`;
-   document.getElementById('supplierViewTotal').innerText = `₱${subtotal.toLocaleString()}`;
-
-   document.getElementById('supplierEmailBox1').innerText = supData.email;
-   document.getElementById('supplierEmailBox2').innerText = supData.altEmail || 'support@supplier.com';
-   document.getElementById('supplierEmailSubjectInput').value = `Purchase Order ${poNum}`;
-   document.getElementById('supplierEmailMsgPoNum').innerText = poNum;
-
-   document.getElementById('backToPoDetailsFromSupplierBtn').onclick = () => viewPoDetails(poNum);
-
-   switchView('supplier-view');
- }
-
-</script>
+@endsection

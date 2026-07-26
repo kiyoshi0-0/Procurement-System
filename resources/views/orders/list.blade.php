@@ -152,7 +152,7 @@
                             </td>
                             <td class="py-4 px-4 text-center" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center gap-3 text-sm">
-                                    <a href="{{ route('orders.details', $po->po_number) }}" title="View Details" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center transition"><i class="fa fa-eye text-xs"></i></a>
+                                    <a href="{{ route('orders.details', $po->id) }}" title="View Details" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center transition"><i class="fa fa-eye text-xs"></i></a>
                                     <a href="{{ route('orders.edit', $po->id) }}" title="Edit Order" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-amber-50 hover:text-amber-600 flex items-center justify-center transition"><i class="fa fa-edit text-xs"></i></a>
                                     <form action="{{ route('orders.destroy', $po->id) }}" method="POST" onsubmit="return confirm('Delete this order?');" class="m-0 inline-block">
                                         @csrf @method('DELETE')
@@ -169,7 +169,6 @@
         </div>
     </div>
 
-    <button onclick="window.location.href='{{ route('orders.create') }}'" class="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 z-10 cursor-pointer">&#43;</button>
 </section>
 
 <script>

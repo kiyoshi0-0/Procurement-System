@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Purchase;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
 
 class PurchaseRequest extends Model
@@ -17,6 +18,41 @@ class PurchaseRequest extends Model
         'brand', 'qty', 'manager_comment', 'price', 'status' // Ensure status is here
     ];
 
+    public static function syncApprovedRequestsToPurchaseOrders(): void
+    {
+        static::whereIn('status', ['approved', 'Approved'])
+            ->get()
+            ->each(function (PurchaseRequest $purchaseRequest) {
+                $poNumber = 'PO-2026-' . str_pad($purchaseRequest->id, 3, '0', STR_PAD_LEFT);
+
+                if (PurchaseOrder::where('po_number', $poNumber)->exists()) {
+                    return;
+                }
+
+                $supplierId = Supplier::where('name', $purchaseRequest->supplier)->value('id')
+                    ?? Supplier::inRandomOrder()->value('id')
+                    ?? 1;
+
+                $purchaseOrder = PurchaseOrder::firstOrCreate(
+                    ['po_number' => $poNumber],
+                    [
+                        'date' => now()->toDateString(),
+                        'supplier_id' => $supplierId,
+                        'status' => 'Confirmed',
+                        'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
+                    ]
+                );
+
+                PurchaseOrderItem::firstOrCreate([
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'name' => $purchaseRequest->item_name,
+                ], [
+                    'qty' => $purchaseRequest->qty,
+                    'price' => $purchaseRequest->price ?? 0,
+                ]);
+            });
+    }
+
     /**
      * The "booted" method of the model.
      * This acts as an automatic trigger every time a PurchaseRequest is touched.
@@ -26,18 +62,42 @@ class PurchaseRequest extends Model
         $syncToHistory = function ($purchaseRequest) {
             // Check if the status is approved (converting to lowercase to be safe)
             if (strtolower($purchaseRequest->status) === 'approved') {
-                
-                // Since PurchaseRequest uses a string for supplier, we grab a random valid Supplier ID for the history
-                $supplierId = Supplier::inRandomOrder()->value('id') ?? 1;
+                $poNumber = 'PO-2026-' . str_pad($purchaseRequest->id, 3, '0', STR_PAD_LEFT);
 
-                Purchase::create([
-                    'supplier_id' => $supplierId,
-                    'item_name'   => $purchaseRequest->item_name,
-                    'po_number'   => 'PO-2026-' . str_pad($purchaseRequest->id, 3, '0', STR_PAD_LEFT),
-                    'quantity'    => $purchaseRequest->qty,
-                    'total_price' => ($purchaseRequest->price ?? 1000) * $purchaseRequest->qty,
-                    'status'      => 'Completed',
-                ]);
+                // Avoid creating duplicate purchase orders for the same request
+                if (PurchaseOrder::where('po_number', $poNumber)->exists()) {
+                    return;
+                }
+
+                // Try to map the request supplier string to a real Supplier record
+                $supplierId = Supplier::where('name', $purchaseRequest->supplier)->value('id')
+                    ?? Supplier::inRandomOrder()->value('id')
+                    ?? 1;
+
+                try {
+                    $purchaseOrder = PurchaseOrder::firstOrCreate(
+                        ['po_number' => $poNumber],
+                        [
+                            'date' => now()->toDateString(),
+                            'supplier_id' => $supplierId,
+                            'status' => 'Confirmed',
+                            'delivery_address' => $purchaseRequest->estimated_delivery ?? 'Not specified',
+                        ]
+                    );
+
+                    PurchaseOrderItem::firstOrCreate([
+                        'purchase_order_id' => $purchaseOrder->id,
+                        'name' => $purchaseRequest->item_name,
+                    ], [
+                        'qty' => $purchaseRequest->qty,
+                        'price' => $purchaseRequest->price ?? 0,
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                        return;
+                    }
+                    throw $e;
+                }
             }
         };
 

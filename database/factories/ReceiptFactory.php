@@ -31,6 +31,9 @@ class ReceiptFactory extends Factory
 
         $inspectionStatus = $this->faker->randomElement(['Passed', 'Failed', 'Pending']);
 
+        $poPrice = $this->faker->randomFloat(2, 1000, 25000);
+        $invoicePrice = $hasDiscrepancy ? $poPrice + $this->faker->randomFloat(2, 1, 2500) : $poPrice;
+
         return [
             'gr_number' => 'GR-' . strtoupper($this->faker->bothify('#####')),
             'po_number' => $poNumber,
@@ -45,9 +48,17 @@ class ReceiptFactory extends Factory
             'po_price' => $poPrice,
             'invoice_price' => $invoicePrice,
             'warehouse' => $this->faker->randomElement(['Main Warehouse', 'North Depot', 'South Hub']),
+
             'inspection_status' => $inspectionStatus,
             'match_status' => $matchStatus,
             'approved_at' => ($matchStatus === 'MATCHED' && $inspectionStatus === 'Passed') ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
+
+            'inspection_status' => $hasDiscrepancy ? 'Failed' : 'Passed',
+            'po_price' => $poPrice,
+            'invoice_price' => $invoicePrice,
+            'match_status' => $hasDiscrepancy ? 'PRICE MISMATCH' : 'MATCHED',
+            'approved_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+
         ];
     }
 }

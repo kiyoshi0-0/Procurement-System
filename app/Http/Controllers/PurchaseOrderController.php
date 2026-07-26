@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Purchase;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
+use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
-use App\Models\Purchase;
 
 class PurchaseOrderController extends Controller
 {
@@ -15,9 +17,13 @@ class PurchaseOrderController extends Controller
      */
     public function list()
     {
+        PurchaseRequest::syncApprovedRequestsToPurchaseOrders();
+
         $purchaseOrders = PurchaseOrder::with(['supplier', 'items'])->get();
+
         return view('orders.list', compact('purchaseOrders'));
     }
+
     public function create()
     {
         $suppliers = Supplier::all();
@@ -83,16 +89,14 @@ class PurchaseOrderController extends Controller
             'po_number' => 'required|unique:purchase_orders,po_number,' . $purchaseOrder->id,
             'date' => 'required|date',
             'supplier_id' => 'required|exists:suppliers,id',
-            'status' => 'required|string',
-            'delivery_address' => 'required|string',
+            'status' => 'nullable|string',
         ]);
 
         $purchaseOrder->update([
             'po_number' => $validated['po_number'],
             'date' => $validated['date'],
             'supplier_id' => $validated['supplier_id'],
-            'status' => $validated['status'],
-            'delivery_address' => $validated['delivery_address'],
+            'status' => $validated['status'] ?? $purchaseOrder->status,
         ]);
 
         // Log the update activity
@@ -109,11 +113,10 @@ class PurchaseOrderController extends Controller
     /**
      * Display the specified purchase order details.
      */
-    public function show($po_number)
+    public function show($id)
     {
         $po = PurchaseOrder::with(['supplier', 'items'])
-            ->where('po_number', $po_number)
-            ->firstOrFail();
+            ->findOrFail($id);
 
         return view('orders.details', compact('po'));
     }
@@ -145,20 +148,33 @@ class PurchaseOrderController extends Controller
      */
     public function history()
     {
-        // Fetch paginated activity logs for the view
-        $activityLogs = ActivityLog::latest()->paginate(10);
+        // Fetch paginated activity logs for the view, excluding only Purchase Order create/edit records
+        $activityLogs = ActivityLog::where(function ($query) {
+            $query->whereNot(function ($subQuery) {
+                $subQuery->whereIn('activity', ['Created', 'Updated'])
+                    ->where('details', 'like', '%Purchase Order%');
+            });
+        })
+        ->latest()
+        ->paginate(10);
         
         return view('orders.history', compact('activityLogs'));
     }
 
     public function orderHistory()
     {
-        // Sort by po_number ascending so it matches the request sequence (PO-2026-001, PO-2026-002, etc.)
-        $purchases = Purchase::with('supplier')
-            ->orderBy('po_number', 'asc')
-            ->get();
+        // Prefer flat Purchase history when available, otherwise fallback to PO item history.
+        if (Purchase::count() > 0) {
+            $historyItems = Purchase::with('supplier')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $historyItems = PurchaseOrderItem::with(['purchaseOrder.supplier'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
-        return view('orders.orderhistory', compact('purchases'));
+        return view('orders.orderhistory', compact('historyItems'));
     }
     
 
@@ -185,24 +201,36 @@ class PurchaseOrderController extends Controller
     {
         // Hanapin ang PO sa database
         $po = PurchaseOrder::with('items')->findOrFail($id);
+        $suppliers = Supplier::all();
         
         // Ibalik ang edit view kasama ang PO data
-        return view('orders.edit', compact('po'));
+        return view('orders.edit', compact('po', 'suppliers'));
     }
-    public function print($poNumber)
+    public function print($id)
     {
-        // Hanapin ang PO gamit ang po_number string
-        $po = PurchaseOrder::where('po_number', $poNumber)->with('items')->firstOrFail();
-        
-        // I-return ang view at ipasa ang $po object
-        return view('orders.print', compact('po')); 
+        $po = PurchaseOrder::with(['items', 'supplier'])->findOrFail($id);
+
+        return view('orders.print', compact('po'));
     }
-    public function supplierPreview($poNumber)
+    public function sendToSupplier($id)
     {
-        // Hanapin ang PO sa database kasama ang mga items nito
-        $po = PurchaseOrder::where('po_number', $poNumber)->with('items')->firstOrFail();
-        
-        // I-pass ang $po sa supplier.blade.php
+        $po = PurchaseOrder::findOrFail($id);
+        $po->update(['status' => 'Sent']);
+
+        ActivityLog::create([
+            'po_number' => $po->po_number,
+            'activity' => 'Sent',
+            'details' => "Sent Purchase Order {$po->po_number} to supplier.",
+            'user_name' => 'Admin'
+        ]);
+
+        return redirect()->route('orders.supplier', $po->id)->with('success', 'Purchase Order sent to supplier.');
+    }
+
+    public function supplierPreview($id)
+    {
+        $po = PurchaseOrder::with(['items', 'supplier'])->findOrFail($id);
+
         return view('orders.supplier', compact('po'));
     }
 }

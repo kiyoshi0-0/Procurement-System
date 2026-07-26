@@ -13,7 +13,7 @@ class PurchaseOrderItem extends Model
         'purchase_order_id',
         'name',
         'qty',
-        'price'
+        'price',
     ];
 
     public function purchaseOrder()

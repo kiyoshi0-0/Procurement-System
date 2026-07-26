@@ -12,12 +12,11 @@ class PurchaseOrder extends Model
     protected $fillable = [
         'po_number',
         'date',
-        'supplier_id', // Changed from string 'supplier' to foreign key ID
+        'supplier_id',
         'status',
         'delivery_address',
     ];
 
-    // Define the relationship: A purchase order belongs to a supplier
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
@@ -26,5 +25,14 @@ class PurchaseOrder extends Model
     public function items()
     {
         return $this->hasMany(PurchaseOrderItem::class);
+    }
+
+    public function receipts()
+    {
+        return $this->hasMany(
+            \App\Models\Receipt::class,
+            'po_number',
+            'po_number'
+        );
     }
 }

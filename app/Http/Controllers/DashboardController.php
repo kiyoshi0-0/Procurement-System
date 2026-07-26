@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use App\Models\Purchase;
+use App\Models\Receipt;
+use App\Models\ActivityLog;
 
 class DashboardController extends Controller
 {
@@ -16,27 +19,37 @@ class DashboardController extends Controller
         // 1. Metric Scorecard Totals
         $pendingRequestsCount = PurchaseRequest::whereRaw('LOWER(status) = ?', ['pending'])->count();
         $activeSuppliersCount = Supplier::count();
-        $purchaseOrdersCount  = Purchase::count();
-        $totalSpending        = Purchase::sum('total_price');
+        $purchaseOrdersCount  = PurchaseOrder::count();
+        $totalSpending        = PurchaseOrder::with('items')
+            ->get()
+            ->sum(fn($po) => $po->items->sum(fn($item) => $item->qty * $item->price));
 
         // 2. Latest Purchase Orders Table (Top 6 latest entries)
-        $latestOrders = Purchase::with('supplier')
+        $latestOrders = PurchaseOrder::with(['supplier', 'items'])
             ->latest()
             ->take(6)
             ->get();
 
-        // 3. Status Pie Chart Aggregation (Delivered / Pending / Cancelled counts)
-        $deliveredCount = Purchase::whereRaw('LOWER(status) = ?', ['delivered'])->orWhereRaw('LOWER(status) = ?', ['completed'])->count();
-        $pendingCount   = Purchase::whereRaw('LOWER(status) = ?', ['pending'])->count();
-        $cancelledCount = Purchase::whereRaw('LOWER(status) = ?', ['cancelled'])->orWhereRaw('LOWER(status) = ?', ['rejected'])->count();
-        $totalOrdersForChart = $deliveredCount + $pendingCount + $cancelledCount;
+        // 3. Status Doughnut Chart Aggregation (Delivered / Pending / Cancelled counts)
+        $statusGroups = PurchaseOrder::select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as count'))
+            ->groupBy(DB::raw('LOWER(status)'))
+            ->pluck('count', 'status')
+            ->toArray();
 
-        // Calculate chart percentages safely
+        $deliveredCount = $statusGroups['delivered'] ?? 0;
+        $cancelledCount = $statusGroups['cancelled'] ?? 0;
+        $pendingCount = ($statusGroups['sent'] ?? 0)
+            + ($statusGroups['confirmed'] ?? 0)
+            + ($statusGroups['pending'] ?? 0)
+            + ($statusGroups['approved'] ?? 0);
+
         $chartData = [
-            'delivered' => $totalOrdersForChart > 0 ? round(($deliveredCount / $totalOrdersForChart) * 100, 1) : 0,
-            'pending'   => $totalOrdersForChart > 0 ? round(($pendingCount / $totalOrdersForChart) * 100, 1) : 0,
-            'cancelled' => $totalOrdersForChart > 0 ? round(($cancelledCount / $totalOrdersForChart) * 100, 1) : 0,
+            'delivered' => $deliveredCount,
+            'pending' => $pendingCount,
+            'cancelled' => $cancelledCount,
         ];
+
+        $activityLogs = ActivityLog::latest()->take(5)->get();
 
         return view('dashboard.index', compact(
             'pendingRequestsCount',
@@ -44,7 +57,8 @@ class DashboardController extends Controller
             'purchaseOrdersCount',
             'totalSpending',
             'latestOrders',
-            'chartData'
+            'chartData',
+            'activityLogs'
         ));
     }
 
@@ -53,7 +67,35 @@ class DashboardController extends Controller
     }
 
     public function generate() {
-        return view('dashboard.generate');
+        $statusGroups = PurchaseOrder::select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as count'))
+            ->groupBy(DB::raw('LOWER(status)'))
+            ->pluck('count', 'status')
+            ->toArray();
+
+        $deliveredCount = $statusGroups['delivered'] ?? 0;
+        $cancelledCount = $statusGroups['cancelled'] ?? 0;
+        $pendingCount = ($statusGroups['sent'] ?? 0)
+            + ($statusGroups['confirmed'] ?? 0)
+            + ($statusGroups['pending'] ?? 0)
+            + ($statusGroups['approved'] ?? 0);
+
+        $purchaseOrdersCount = PurchaseOrder::count();
+        $totalSpending = PurchaseOrder::with('items')
+            ->get()
+            ->sum(fn($po) => $po->items->sum(fn($item) => $item->qty * $item->price));
+
+        $invoicesMatched = Receipt::all()
+            ->filter(fn($receipt) => $receipt->effective_match_status === 'MATCHED')
+            ->count();
+        $departmentCount = PurchaseRequest::distinct('dept')->count('dept');
+
+        $chartData = [
+            'delivered' => $deliveredCount,
+            'pending' => $pendingCount,
+            'cancelled' => $cancelledCount,
+        ];
+
+        return view('dashboard.generate', compact('purchaseOrdersCount', 'chartData', 'totalSpending', 'invoicesMatched', 'departmentCount'));
     }
 
     // --- FUNCTION 2: HANDLE SAVING NEW ORDERS ---

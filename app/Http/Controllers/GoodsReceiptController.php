@@ -13,25 +13,25 @@ class GoodsReceiptController extends Controller
     {
         $receipts = Receipt::latest()->get();
 
-        $shipmentsPending = Receipt::where('inspection_status', 'Pending')->count();
-        $approvedCount = Receipt::where('inspection_status', 'Approved')->count();
+        $shipmentsPending = $receipts->where('inspection_status', 'Pending')->count();
+        $approvedCount = $receipts->where('inspection_status', 'Approved')->count();
 
-        $discrepanciesCount = Receipt::whereIn('match_status', [
+        $discrepanciesCount = $receipts->filter(fn($receipt) => in_array($receipt->effective_match_status, [
             'QTY MISMATCH',
             'PRICE MISMATCH'
-        ])->count();
+        ]))->count();
 
-        $deliveryToday = Receipt::whereDate('created_at', today())->count();
+        $deliveryToday = $receipts->whereBetween('created_at', [today()->startOfDay(), today()->endOfDay()])->count();
 
-        $itemsReceived = Receipt::sum('gr_quantity');
+        $itemsReceived = $receipts->sum('gr_quantity');
 
-        $pendingInspection = Receipt::where('inspection_status', 'Pending')->count();
+        $pendingInspection = $receipts->where('inspection_status', 'Pending')->count();
 
-        $inspectionPassed = Receipt::where('inspection_status', 'Passed')->count();
+        $inspectionPassed = $receipts->where('inspection_status', 'Passed')->count();
 
-        $matchedCount = Receipt::where('match_status', 'MATCHED')->count();
+        $matchedCount = $receipts->filter(fn($receipt) => $receipt->effective_match_status === 'MATCHED')->count();
 
-        $readyFinance = Receipt::where('inspection_status', 'Approved')->count();
+        $readyFinance = $receipts->where('inspection_status', 'Approved')->count();
 
 
         return view('receipts.goodreceipt', compact(
@@ -52,10 +52,12 @@ class GoodsReceiptController extends Controller
     public function approve($id)
 {
     $receipt = Receipt::findOrFail($id);
-    
     $receipt->inspection_status = 'Approved';
-    $receipt->match_status = 'MATCHED';
-    $receipt->approved_at = now();
+    $receipt->po_price = $receipt->po_price ?? $receipt->po_price;
+    $receipt->invoice_price = $receipt->invoice_price ?? $receipt->invoice_price;
+    $receipt->match_status = $receipt->computed_match_status;
+    $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
+    $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
     $receipt->save();
 
   return redirect()->back()->with('success', 'Receipt successfully sent to Finance!');
@@ -114,8 +116,11 @@ class GoodsReceiptController extends Controller
         $receipt->item_name = $request->item_name;
         $receipt->po_quantity = $request->po_quantity;
         $receipt->gr_quantity = $request->gr_quantity;
+        $receipt->po_price = $request->po_price;
+        $receipt->invoice_price = $request->invoice_price;
         $receipt->warehouse = $request->warehouse;
         $receipt->inspection_status = $request->inspection_status;
+
         $receipt->match_status = $request->match_status;
 
 
@@ -136,9 +141,13 @@ class GoodsReceiptController extends Controller
 
         }
 
+        $receipt->match_status = $receipt->computed_match_status;
+=
+
+        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
+        $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
 
         $receipt->save();
-
 
         return redirect()
             ->route('receipts.index')
@@ -153,15 +162,20 @@ class GoodsReceiptController extends Controller
         );
     }
 
+    public function details($id)
+    {
+        $receipt = Receipt::with('purchaseOrder')->findOrFail($id);
+
+        return view('receipts.details', compact('receipt'));
+    }
 
     public function threeWayMatching()
     {
-        $receipts = Receipt::latest()->get();
+        $receipts = Receipt::with('purchaseOrder')
+            ->latest()
+            ->get();
 
-      return view(
-    'receipts.threewaymatching',
-    compact('receipts')
-);
+        return view('receipts.threewaymatching', compact('receipts'));
     }
 
 

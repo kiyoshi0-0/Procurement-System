@@ -6,6 +6,7 @@
 
     return new class extends Migration
     {
+
         public function up(): void
     {
         Schema::create('receipts', function (Blueprint $table) {
@@ -22,6 +23,9 @@
             $table->timestamp('approved_at')->nullable(); // <-- Add this line
             $table->timestamps();
         });
+
+        Schema::dropIfExists('receipts');
+
     }
 
         public function down(): void

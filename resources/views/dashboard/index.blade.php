@@ -62,10 +62,10 @@
                 </svg>
             </div>
             <div class="flex flex-col justify-start pt-1.5 leading-none">
-                <span class="text-[15px] font-extrabold text-[#0F172A] tracking-tight">Total Spending</span>
-                <div class="flex items-baseline space-x-1.5 mt-1">
-                    <span class="text-[20px] font-black text-[#0F172A] tracking-tight uppercase">PHP</span>
-                    <span class="text-[20px] font-black text-[#0F172A] tracking-tight">{{ number_format($totalSpending, 2) }}</span>
+                <span class="text-xs font-bold text-gray-900 tracking-wide">Total Spending</span>
+                <div class="flex items-baseline mt-1">
+                    <span class="text-2xl font-bold text-gray-900">₱</span>
+                    <span class="text-[21px] font-bold text-gray-900">{{ number_format($totalSpending, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -92,23 +92,35 @@
                 <h3 class="text-base font-bold text-gray-900">Purchase Status</h3>
             </div>
             <div class="flex items-center h-full">
-                <!-- Custom Left Legends -->
-                <div class="space-y-3 w-1/2 pr-2">
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-delivered inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Delivered</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-pending inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Pending</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="w-4 h-4 rounded-full bg-chart-cancelled inline-block"></span>
-                        <span class="text-xs font-bold text-gray-800">Cancelled</span>
-                    </div>
-                </div>
                 <div class="w-1/2 h-36 relative flex items-center justify-center">
                     <canvas id="statusChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-3xl font-bold text-slate-900">{{ $purchaseOrdersCount }}</span>
+                        <span class="text-[11px] uppercase tracking-[0.24em] text-gray-500">Total POs</span>
+                    </div>
+                </div>
+                <div class="space-y-4 w-1/2 pl-4">
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-delivered inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Delivered</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['delivered'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-pending inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Pending</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['pending'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-chart-cancelled inline-block"></span>
+                            <span class="text-xs font-semibold text-gray-600">Cancelled</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ $chartData['cancelled'] }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,13 +128,22 @@
         <!-- Vertical Feed List: Recent Activity -->
         <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 lg:col-span-3 flex flex-col">
             <h3 class="text-base font-bold text-gray-900 mb-5">Recent Activity</h3>
-            <div class="relative border-l-2 border-brand-green ml-16 space-y-5 flex-1 max-h-47.5 pr-1">
-                <div class="relative pl-6">
-                    <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
-                    <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ now()->format('H:i') }}</span>
-                    <h4 class="text-xs font-bold text-gray-900 leading-tight">System Synchronized</h4>
-                    <p class="text-[10px] text-gray-400 font-medium">Dashboard Active</p>
-                </div>
+            <div class="relative border-l-2 border-brand-green ml-16 space-y-5 flex-1 max-h-47.5 pr-1 overflow-y-auto">
+                @forelse($activityLogs as $log)
+                    <div class="relative pl-6">
+                        <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
+                        <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ $log->created_at->format('H:i') }}</span>
+                        <h4 class="text-xs font-bold text-gray-900 leading-tight">{{ $log->activity }}</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">{{ $log->details }}</p>
+                    </div>
+                @empty
+                    <div class="relative pl-6">
+                        <span class="absolute -left-1.75 top-1 bg-brand-green w-3 h-3 rounded-full ring-4 ring-white"></span>
+                        <span class="absolute -left-14 top-0.5 text-[11px] font-bold text-gray-500">{{ now()->format('H:i') }}</span>
+                        <h4 class="text-xs font-bold text-gray-900 leading-tight">No recent activity</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">Activity feed will appear here when actions occur.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
@@ -132,7 +153,7 @@
         <div class="bg-white rounded-2xl p-4 shadow-md border border-gray-100 lg:col-span-9 overflow-hidden">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-xl font-bold text-gray-900">Latest Purchase Orders</h3>
-                <a href="{{ route('suppliers.history') }}" class="text-xs font-bold text-gray-400 hover:text-brand-green transition-colors">view all</a>
+                <a href="{{ route('orders.list') }}" class="text-xs font-bold text-gray-400 hover:text-brand-green transition-colors">view all</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -147,13 +168,20 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50 text-xs font-medium text-gray-800">
                         @forelse($latestOrders as $order)
+                        @php
+                            $firstItem = $order->items->first();
+                            $itemLabel = $firstItem ? $firstItem->name : 'No items';
+                            $additionalCount = max(0, $order->items->count() - 1);
+                            $itemLabel = $additionalCount > 0 ? $itemLabel . ' + ' . $additionalCount . ' more' : $itemLabel;
+                            $orderTotal = $order->items->sum(fn($item) => $item->qty * $item->price);
+                        @endphp
                         <tr class="hover:bg-gray-50/80 transition-colors">
                             <td class="py-3 text-center font-medium">{{ $order->po_number }}</td>
                             <td class="py-3 pl-4 font-medium">
-                                <span class="font-bold text-gray-900 block">{{ $order->item_name }}</span>
+                                <span class="font-bold text-gray-900 block">{{ $itemLabel }}</span>
                                 <span class="text-xs text-gray-500">{{ $order->supplier->name ?? 'Unknown Supplier' }}</span>
                             </td>
-                            <td class="py-3 text-center font-medium">₱{{ number_format($order->total_price, 2) }}</td>
+                            <td class="py-3 text-center font-medium">₱{{ number_format($orderTotal, 2) }}</td>
                             <td class="py-3 text-center font-medium text-gray-900">
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded text-[10px] uppercase">
                                     {{ $order->status }}
@@ -173,16 +201,6 @@
 
         <!-- Vertical Module Actions Blocks -->
         <div class="lg:col-span-3 flex flex-col gap-5">
-            <a href="{{ route('orders.create') }}"
-                class="w-full bg-bg-actionBlue hover:bg-bg-actionBlueHover text-slate-900 font-bold py-4 px-5 rounded-2xl flex items-center space-x-4 transition-all transform active:scale-[0.99] shadow-sm group">
-                <div class="bg-white/40 p-2 rounded-xl text-slate-800 group-hover:scale-105 transition-transform">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                </div>
-                <span class="text-[17px] tracking-tight">Create Order</span>
-            </a>
 
             <a href="{{ route('suppliers.create') }}"
                 class="w-full bg-bg-actionBlue hover:bg-bg-actionBlueHover text-slate-900 font-bold py-4 px-5 rounded-2xl flex items-center space-x-4 transition-all transform active:scale-[0.99] shadow-sm group">
@@ -317,16 +335,18 @@
             }
         });
 
-        // Initialize Purchase Order Status Pie Chart Graphic Elements
+        // Initialize Purchase Order Status Doughnut Chart Graphic Elements
+        const statusCounts = @json(array_values($chartData));
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         new Chart(ctxStatus, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: ['Delivered', 'Pending', 'Cancelled'],
                 datasets: [{
-                    data: [71.43, 20.41, 8.16],
+                    data: statusCounts,
                     backgroundColor: ['#727CA3', '#AAB06C', '#B44A4A'],
-                    borderWidth: 0
+                    borderWidth: 0,
+                    cutout: '70%'
                 }]
             },
             options: {
@@ -335,7 +355,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        callbacks: { label: (context) => ` ${context.label}: ${context.raw}%` }
+                        callbacks: {
+                            label: (context) => {
+                                const total = statusCounts.reduce((sum, value) => sum + value, 0);
+                                const percent = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${context.raw} (${percent}%)`;
+                            }
+                        }
                     }
                 }
             }

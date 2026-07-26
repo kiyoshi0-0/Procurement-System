@@ -12,17 +12,21 @@
     <form action="{{ route('orders.update', $po->id) }}" method="POST" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-6">
         @csrf
         @method('PUT')
+        <input type="hidden" name="po_number" value="{{ $po->po_number }}">
+        <input type="hidden" name="date" value="{{ $po->date }}">
+        <input type="hidden" name="status" value="{{ $po->status }}">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            <!-- Left Side: Supplier and Address -->
+            <!-- Left Side: Supplier -->
             <div class="space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-gray-700">Supplier</label>
-                    <input type="text" name="supplier" value="{{ $po->supplier }}" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700">Delivery Address</label>
-                    <input type="text" name="delivery_address" value="{{ $po->delivery_address }}" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select name="supplier_id" class="w-full mt-2 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Select supplier</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ old('supplier_id', $po->supplier_id) == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
@@ -58,7 +62,7 @@
         <!-- Action Buttons -->
         <div class="flex gap-4 pt-4 border-t border-gray-100">
             <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition">Update PO</button>
-            <a href="{{ route('orders.details', $po->po_number) }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition">Cancel</a>
+            <a href="{{ route('orders.details', $po->id) }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition">Cancel</a>
         </div>
     </form>
 </section>

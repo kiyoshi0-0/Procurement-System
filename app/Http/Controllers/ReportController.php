@@ -88,9 +88,8 @@ if ($format === 'docx') {
     exit; 
 }
 
-        $pdf = App::make('dompdf.wrapper');
+        $pdf = Pdf::loadHTML($htmlContent);
         $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
-        $pdf->loadHTML($htmlContent);
         return $pdf->download($fileName);
     }
 
