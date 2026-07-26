@@ -163,13 +163,13 @@
                                 'supporting_docs' => $req->supporting_docs ?? [] 
                             ]) }}"
                             onclick="prepareAndOpenDrawer(this)"
-                            class="text-blue-500 hover:text-blue-700 cursor-pointer transition">
-                      <i class="fas fa-eye text-xs"></i>
+                            class="text-gray-400 hover:text-blue-700 cursor-pointer transition">
+                       <i data-lucide="eye" class="w-4 h-4"></i>
                     </button>
                     <form action="{{ route('requests.destroy', $req->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this requisition request?');">
                       @csrf
                       @method('DELETE')
-                      <button type="submit" class="text-red-500 hover:text-red-700 p-1 text-sm"><i class="fas fa-trash"></i></button>
+                      <button type="submit" class="text-gray-400 hover:text-red-700 p-1 text-sm"> <i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </form>
                   </td>
                 </tr>
