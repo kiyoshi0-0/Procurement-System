@@ -384,27 +384,33 @@
 
     <!-- Scaled Down Action Dashboard Footer Area -->
     <div class="p-4 border-t border-gray-200 bg-white space-y-3 shrink-0">
-      <div>
-        <label class="text-xs font-bold text-gray-700">Your Decision as <span class="text-[#1E3A8A] font-bold">Procurement Manager</span></label>
-        <textarea id="decision-comment" oninput="handleCommentInput()" placeholder="Add a comment (optional)..." class="w-full mt-1.5 p-2 border border-gray-300 rounded-lg text-xs h-14 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-800 placeholder-gray-400 shadow-sm"></textarea>
+      <div id="final-status-notice" class="hidden p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs">
+        This request is already finalized. No further decision is needed.
       </div>
 
-      <!-- Decision State Filter Button Row Layout Selection Grid -->
-      <div class="grid grid-cols-3 gap-2">
-        <button id="btn-approve" type="button" onclick="selectDecision('approved')" class="py-1.5 px-2 border border-emerald-500 bg-emerald-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer">
-          <i class="fa-regular fa-circle-check text-[11px]"></i> Approved
-        </button>
-        <button id="btn-revision" type="button" onclick="selectDecision('revision')" class="py-1.5 px-2 border border-amber-500 bg-white text-amber-600 font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer hover:bg-amber-50">
-          <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Revision
-        </button>
-        <button id="btn-reject" type="button" onclick="selectDecision('rejected')" class="py-1.5 px-2 border border-rose-200 bg-rose-50 text-rose-600 font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer hover:bg-rose-100/50">
-          <i class="fa-regular fa-circle-xmark text-[11px]"></i> Rejected
+      <div id="decision-actions-panel">
+        <div>
+          <label class="text-xs font-bold text-gray-700">Your Decision as <span class="text-[#1E3A8A] font-bold">Procurement Manager</span></label>
+          <textarea id="decision-comment" oninput="handleCommentInput()" placeholder="Add a comment (optional)..." class="w-full mt-1.5 p-2 border border-gray-300 rounded-lg text-xs h-14 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-800 placeholder-gray-400 shadow-sm"></textarea>
+        </div>
+
+        <!-- Decision State Filter Button Row Layout Selection Grid -->
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-approve" type="button" onclick="selectDecision('approved')" class="py-1.5 px-2 border border-emerald-500 bg-emerald-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer">
+            <i class="fa-regular fa-circle-check text-[11px]"></i> Approved
+          </button>
+          <button id="btn-revision" type="button" onclick="selectDecision('revision')" class="py-1.5 px-2 border border-amber-500 bg-white text-amber-600 font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer hover:bg-amber-50">
+            <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Revision
+          </button>
+          <button id="btn-reject" type="button" onclick="selectDecision('rejected')" class="py-1.5 px-2 border border-rose-200 bg-rose-50 text-rose-600 font-semibold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer hover:bg-rose-100/50">
+            <i class="fa-regular fa-circle-xmark text-[11px]"></i> Rejected
+          </button>
+        </div>
+
+        <button id="btn-confirm-action" type="button" onclick="submitManagerDecision()" class="w-full py-2 bg-[#00A86B] text-white font-bold rounded-lg text-xs tracking-wide transition-all focus:outline-none shadow shadow-emerald-700/10 cursor-pointer">
+          Confirm: Approved
         </button>
       </div>
-
-      <button id="btn-confirm-action" type="button" onclick="submitManagerDecision()" class="w-full py-2 bg-[#00A86B] text-white font-bold rounded-lg text-xs tracking-wide transition-all focus:outline-none shadow shadow-emerald-700/10 cursor-pointer">
-        Confirm: Approved
-      </button>
     </div>
   </div>
 
@@ -645,8 +651,28 @@
           prioPill.className = "px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-200 text-slate-500";
         }
 
-        selectDecision(req.status.toLowerCase() === 'pending' ? 'approved' : req.status.toLowerCase());
-        document.getElementById('decision-comment').value = '';
+        const statusKey = req.status.toLowerCase();
+        const isFinalStatus = ['approved', 'revision', 'rejected'].includes(statusKey);
+        const decisionPanel = document.getElementById('decision-actions-panel');
+        const finalStatusNotice = document.getElementById('final-status-notice');
+
+        if (isFinalStatus) {
+          decisionPanel.classList.add('hidden');
+          finalStatusNotice.classList.remove('hidden');
+          if (statusKey === 'approved') {
+            finalStatusNotice.innerText = 'This request has already been approved. No further decision is required.';
+          } else if (statusKey === 'revision') {
+            finalStatusNotice.innerText = 'This request has been returned for revision. No approval action is needed here.';
+          } else {
+            finalStatusNotice.innerText = 'This request has been rejected. No further decision is required.';
+          }
+        } else {
+          decisionPanel.classList.remove('hidden');
+          finalStatusNotice.classList.add('hidden');
+          document.getElementById('decision-comment').value = '';
+        }
+
+        selectDecision(statusKey === 'pending' ? 'approved' : statusKey);
         
         document.getElementById('drawerBackdrop').classList.remove('hidden');
         setTimeout(() => {
@@ -678,22 +704,22 @@
         authPill.className = "text-[10px] font-bold text-emerald-600 flex items-center gap-1 ml-2";
         banner.className = "p-3.5 rounded-xl flex items-start space-x-2.5 border border-emerald-200 bg-emerald-50/50 text-emerald-900";
         iconWrap.innerHTML = `<i class="fa-regular fa-circle-check"></i>`;
-        title.innerText = "Purchase Requisition Approved";
-        body.innerText = "This procurement order query status has been checked and verified by the manager team layout.";
+        title.innerText = "Purchase Fully Authorized";
+        body.innerText = "Approved through all required steps. PO may now be issued.";
       } else if(statusText === 'revision') {
         statusPill.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-amber-50 border-amber-200 text-amber-600 uppercase border";
         authPill.className = "text-[10px] font-bold text-amber-600 flex items-center gap-1 ml-2";
         banner.className = "p-3.5 rounded-xl flex items-start space-x-2.5 border border-amber-200 bg-amber-50/50 text-amber-900";
         iconWrap.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i>`;
-        title.innerText = "Returned for Layout Revision";
-        body.innerText = "Document modifications requested. Feedback statement input comments are mandatory before re-evaluating.";
+        title.innerText = "Revision Needed Remarks";
+        body.innerText = "Please review information updates requested.";
       } else if(statusText === 'rejected') {
         statusPill.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-rose-50 border-rose-200 text-rose-600 uppercase border";
         authPill.className = "text-[10px] font-bold text-rose-600 flex items-center gap-1 ml-2";
         banner.className = "p-3.5 rounded-xl flex items-start space-x-2.5 border border-rose-200 bg-rose-50/50 text-rose-900";
         iconWrap.innerHTML = `<i class="fa-regular fa-circle-xmark"></i>`;
-        title.innerText = "Requisition Request Denied";
-        body.innerText = "The processing operation context has been canceled and marked permanently declined by procurement rules.";
+        title.innerText = "Procurement Manager Comment";
+        body.innerText = "No standard rejection grounds provided.";
       }
     }
 

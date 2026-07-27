@@ -185,7 +185,7 @@
 
 
   
-  <div id="sideDrawer" class="fixed inset-0 z-50 justify-end hidden">
+  <div id="sideDrawer" class="fixed inset-0 z-50 flex justify-end hidden">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity" onclick="closeDrawer()"></div>
     
     <div class="bg-white w-full max-w-2xl h-full shadow-2xl relative z-10 flex flex-col justify-between border-l border-gray-200">
