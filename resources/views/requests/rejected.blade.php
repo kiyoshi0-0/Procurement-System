@@ -127,7 +127,7 @@
                       <td class="p-4">{{ $request->dept }}</td>
                       <td class="p-4">{{ $request->item_name }}</td>
                       <td class="p-4">
-                        <span class="px-2.5 py-0.5 rounded-full border font-semibold text-[10px] 
+                        <span class="px-3 py-1 rounded-full border font-bold text-[11px] 
                           {{ strtolower($request->priority) === 'high' ? 'bg-rose-50 text-rose-500 border-rose-200' : (strtolower($request->priority) === 'medium' || strtolower($request->priority) === 'med' ? 'bg-amber-50 text-amber-500 border-amber-200' : 'bg-emerald-50 text-emerald-500 border-emerald-200') }}">
                           {{ ucfirst($request->priority) }}
                         </span>
@@ -135,7 +135,7 @@
                       <td class="p-4">{{ $request->created_at ? $request->created_at->format('Y-m-d') : '--' }}</td>
                       <td class="p-4">{{ $request->requestor }}</td>
                       <td class="p-4">
-                        <span class="px-2 py-0.5 rounded-full border border-rose-200 bg-rose-50 text-rose-500 font-semibold text-[10px]">Rejected</span>
+                        <span class="px-3 py-1 rounded-full border border-rose-200 bg-rose-50 text-rose-500 font-bold text-[12px]">Rejected</span>
                       </td>
                       <td class="p-4 flex items-center justify-center space-x-4 text-gray-400">
                         
