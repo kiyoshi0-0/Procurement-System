@@ -37,7 +37,7 @@
 
     <div class="bg-white rounded-xl shadow p-5 border">
         <p class="text-sm text-slate-500">Price Mismatch</p>
-        <h2 class="text-3xl font-bold text-yellow-500">
+        <h2 class="text-3xl font-bold text-amber-700">
             {{ $receipts->filter(fn($r) => str_contains($r->match_status ?? '', 'PRICE'))->count() }}
         </h2>
     </div>
@@ -131,10 +131,10 @@
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
             <div class="flex justify-between items-center">
                 <div>
-                    <p class="text-sm opacity-80">Total Purchase Orders</p>
-                    <h2 class="text-4xl font-black mt-2">{{ $receipts->count() }}</h2>
+                    <p class="text-sm text-white opacity-100">Total Purchase Orders</p>
+                    <h2 class="text-4xl font-black mt-2 text-white">{{ $receipts->count() }}</h2>
                 </div>
-                <i class="fa-solid fa-file-lines text-5xl opacity-30"></i>
+                <i class="fa-solid fa-file-lines text-5xl text-white opacity-100"></i>
             </div>
         </div>
 
@@ -142,10 +142,10 @@
         <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white shadow-lg">
             <div class="flex justify-between items-center">
                 <div>
-                    <p class="text-sm opacity-80">Successful Matching</p>
-                    <h2 class="text-4xl font-black mt-2">{{ $receipts->where('match_status','MATCHED')->count() }}</h2>
+                    <p class="text-sm text-white opacity-100">Successful Matching</p>
+                    <h2 class="text-4xl font-black mt-2 text-white">{{ $receipts->where('match_status','MATCHED')->count() }}</h2>
                 </div>
-                <i class="fa-solid fa-circle-check text-5xl opacity-30"></i>
+                <i class="fa-solid fa-circle-check text-5xl text-white opacity-100"></i>
             </div>
         </div>
 
@@ -153,10 +153,10 @@
         <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white shadow-lg">
             <div class="flex justify-between items-center">
                 <div>
-                    <p class="text-sm opacity-80">Need Review</p>
-                    <h2 class="text-4xl font-black mt-2">{{ $receipts->filter(fn($receipt) => $receipt->effective_match_status !== 'MATCHED')->count() }}</h2>
+                    <p class="text-sm text-white opacity-100">Need Review</p>
+                    <h2 class="text-4xl font-black mt-2 text-white">{{ $receipts->filter(fn($receipt) => $receipt->effective_match_status !== 'MATCHED')->count() }}</h2>
                 </div>
-                <i class="fa-solid fa-triangle-exclamation text-5xl opacity-30"></i>
+                <i class="fa-solid fa-triangle-exclamation text-5xl text-white opacity-100"></i>
             </div>
         </div>
 
@@ -164,10 +164,10 @@
         <div class="bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
             <div class="flex justify-between items-center">
                 <div>
-                    <p class="text-sm opacity-80">Ready for Finance</p>
-                    <h2 class="text-4xl font-black mt-2">{{ $receipts->where('status','Approved')->count() }}</h2>
+                    <p class="text-sm text-white opacity-100">Ready for Finance</p>
+                    <h2 class="text-4xl font-black mt-2 text-white">{{ $receipts->where('status','Approved')->count() }}</h2>
                 </div>
-                <i class="fa-solid fa-money-check-dollar text-5xl opacity-30"></i>
+                <i class="fa-solid fa-money-check-dollar text-5xl text-white opacity-100"></i>
             </div>
         </div>
     </div>
