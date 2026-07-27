@@ -119,9 +119,11 @@
                     <input type="text" id="searchPayment" placeholder="Search payment..." class="w-64 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
                     <select id="paymentFilter" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
                         <option value="">All Status</option>
-                        <option value="MATCHED">Validated</option>
+                        <option value="MATCHED">Matched</option>
+                        <option value="COMPLETED">Validated</option>
                         <option value="PENDING">Pending</option>
                         <option value="MISMATCH">Mismatch</option>
+                        <option value="SENT TO FINANCE">Sent to Finance</option>
                     </select>
                 </div>
             </div>
@@ -149,12 +151,15 @@
                         <td class="px-5 py-4 text-right">₱{{ number_format($receipt->po_price ?? 0, 2) }}</td>
                         <td class="px-5 py-4 text-right">₱{{ number_format($receipt->invoice_price ?? 0, 2) }}</td>
                      <td class="px-5 py-4 text-center">
+    @php
+        $displayStatus = strtoupper((string) ($receipt->effective_match_status ?? $receipt->match_status ?? $receipt->computed_match_status ?? 'PENDING'));
+    @endphp
     <span class="px-3 py-1 rounded-full text-xs font-bold
-        @if(($receipt->match_status ?? '') == 'SENT TO FINANCE' || !empty($receipt->approved_at)) bg-green-100 text-green-700
-        @elseif(($receipt->match_status ?? '') == 'MATCHED' || ($receipt->match_status ?? '') == 'COMPLETED') bg-green-100 text-green-700
-        @elseif(str_contains($receipt->match_status ?? '', 'MISMATCH')) bg-red-100 text-red-700
+        @if($displayStatus === 'SENT TO FINANCE') bg-green-100 text-green-700
+        @elseif($displayStatus === 'COMPLETED' || $displayStatus === 'MATCHED') bg-green-100 text-green-700
+        @elseif(str_contains($displayStatus, 'MISMATCH')) bg-red-100 text-red-700
         @else bg-yellow-100 text-yellow-700 @endif">
-        {{ !empty($receipt->approved_at) ? 'SENT TO FINANCE' : ($receipt->match_status ?? 'PENDING') }}
+        {{ $displayStatus }}
     </span>
 </td>
                         <td class="px-5 py-4 text-center">
@@ -164,34 +169,20 @@
             <i class="fa-solid fa-eye text-xs"></i>
         </button>
 
-        @php
-            $status = strtoupper($receipt->match_status ?? 'PENDING');
-        @endphp
-
-        {{-- If Pending or Mismatch: Show Validate Button --}}
-        @if($status == 'PENDING' || str_contains($status, 'MISMATCH'))
+        @if($displayStatus === 'SENT TO FINANCE')
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">Sent to Finance</span>
+        @elseif($displayStatus === 'COMPLETED')
+            <form action="{{ route('receipts.approve', $receipt->id) }}" method="POST" class="inline">
+                @csrf
+                @method('PUT')
+                <button type="submit" title="Approve & Send to Finance" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-green-50 text-slate-500 hover:text-green-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-thumbs-up text-xs"></i>
+                </button>
+            </form>
+        @else
             <button type="button" onclick="validatePaymentRecord({{ $receipt->id }})" title="Validate Payment" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-yellow-50 text-slate-500 hover:text-yellow-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
                 <i class="fa-solid fa-check text-xs"></i>
             </button>
-        
-        {{-- If Completed/Validated: Show Approve Button (Send to Finance) --}}
-        @elseif($status == 'COMPLETED' || $status == 'MATCHED')
-            @if(!empty($receipt->approved_at))
-                {{-- Kapag na-approve na at may approved_at na, itabi ang badge na parang sa taas --}}
-                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">Sent to Finance</span>
-            @else
-                <form action="{{ route('receipts.approve', $receipt->id) }}" method="POST" class="inline">
-                    @csrf
-                    @method('PUT')
-                    <button type="submit" title="Approve & Send to Finance" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-green-50 text-slate-500 hover:text-green-600 border border-slate-200 rounded-xl transition shadow-xs cursor-pointer">
-                        <i class="fa-solid fa-thumbs-up text-xs"></i>
-                    </button>
-                </form>
-            @endif
-        
-        {{-- If Already Approved / Sent to Finance --}}
-        @else
-            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">Sent to Finance</span>
         @endif
     </div>
 </td>

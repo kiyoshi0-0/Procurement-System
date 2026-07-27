@@ -39,10 +39,9 @@ class GoodsReceiptController extends Controller
     public function approve($id)
     {
         $receipt = Receipt::findOrFail($id);
-        $receipt->inspection_status = 'Approved';
         $receipt->invoice_price = $receipt->invoice_price ?? $receipt->invoice_price;
         $receipt->match_status = $receipt->computed_match_status;
-        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
+        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Sent to Finance' : 'Pending';
         $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
         $receipt->save();
 
@@ -108,7 +107,7 @@ class GoodsReceiptController extends Controller
         $receipt->inspection_status = $request->inspection_status;
         $receipt->match_status = $receipt->computed_match_status;
 
-        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
+        $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Sent to Finance' : 'Pending';
         $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
 
         $receipt->save();
@@ -180,6 +179,8 @@ public function threeWayMatching()
     try {
         $receipt = Receipt::findOrFail($id);
         $receipt->match_status = 'COMPLETED';
+        $receipt->status = 'Validated';
+        $receipt->approved_at = null;
         $receipt->save();
 
         return response()->json([
@@ -199,10 +200,33 @@ public function threeWayMatching()
     {
         $receipts = Receipt::latest()->get();
 
-     return view(
-    'receipts.paymentvalidation',
-    compact('receipts')
-);
+        $totalInvoices = $receipts->count();
+        $approvedPaymentsCount = $receipts->filter(function ($receipt) {
+            return strtoupper((string) ($receipt->effective_match_status ?? $receipt->match_status ?? $receipt->computed_match_status ?? 'PENDING')) === 'COMPLETED';
+        })->count();
+        $pendingValidationCount = $receipts->filter(function ($receipt) {
+            $status = strtoupper((string) ($receipt->effective_match_status ?? $receipt->match_status ?? $receipt->computed_match_status ?? 'PENDING'));
+            return $status === 'MATCHED' || $status === 'PENDING';
+        })->count();
+        $paymentIssuesCount = $receipts->filter(function ($receipt) {
+            $status = strtoupper((string) ($receipt->effective_match_status ?? $receipt->match_status ?? $receipt->computed_match_status ?? 'PENDING'));
+            return str_contains($status, 'MISMATCH');
+        })->count();
+        $sentToFinanceCount = $receipts->filter(function ($receipt) {
+            return strtoupper((string) ($receipt->effective_match_status ?? $receipt->match_status ?? $receipt->computed_match_status ?? 'PENDING')) === 'SENT TO FINANCE';
+        })->count();
+
+        return view(
+            'receipts.paymentvalidation',
+            compact(
+                'receipts',
+                'totalInvoices',
+                'approvedPaymentsCount',
+                'pendingValidationCount',
+                'paymentIssuesCount',
+                'sentToFinanceCount'
+            )
+        );
     }
 
 

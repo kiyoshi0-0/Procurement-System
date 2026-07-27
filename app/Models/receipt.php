@@ -11,7 +11,12 @@ class Receipt extends Model
     use HasFactory;
 
     protected $guarded = [];
-    protected $appends = ['computed_match_status', 'effective_match_status'];
+    protected $appends = [
+        'computed_match_status',
+        'effective_match_status',
+        'display_match_status',
+        'payment_validation_state',
+    ];
 
     public function purchaseOrder()
     {
@@ -19,21 +24,74 @@ class Receipt extends Model
     }
 
     public function getComputedMatchStatusAttribute()
-{
-    if ($this->inspection_status !== 'Passed') {
-        return 'PENDING';
-    }
-    if ($this->po_quantity !== $this->gr_quantity) {
-        return 'QTY MISMATCH';
-    }
-    if (number_format($this->po_price, 2) !== number_format($this->invoice_price, 2)) {
-        return 'PRICE MISMATCH';
-    }
-    return 'MATCHED';
-}
+    {
+        if ($this->inspection_status !== 'Passed') {
+            return 'PENDING';
+        }
 
-public function getEffectiveMatchStatusAttribute()
-{
-    return $this->match_status ?? $this->computed_match_status;
-}
+        $poQuantity = (int) ($this->po_quantity ?? 0);
+        $grQuantity = (int) ($this->gr_quantity ?? 0);
+
+        if ($poQuantity !== $grQuantity) {
+            return 'QTY MISMATCH';
+        }
+
+        $poPrice = (float) ($this->po_price ?? 0);
+        $invoicePrice = (float) ($this->invoice_price ?? 0);
+
+        if (number_format($poPrice, 2) !== number_format($invoicePrice, 2)) {
+            return 'PRICE MISMATCH';
+        }
+
+        return 'MATCHED';
+    }
+
+    public function getEffectiveMatchStatusAttribute()
+    {
+        $status = strtoupper((string) ($this->match_status ?? $this->computed_match_status ?? 'PENDING'));
+
+        if ($this->status === 'Sent to Finance' || $this->status === 'Approved') {
+            return 'SENT TO FINANCE';
+        }
+
+        if (!empty($this->approved_at) && strtoupper((string) $status) === 'MATCHED') {
+            return 'SENT TO FINANCE';
+        }
+
+        if ($status === 'PENDING' && $this->inspection_status === 'Passed') {
+            return 'MATCHED';
+        }
+
+        return $status;
+    }
+
+    public function getDisplayMatchStatusAttribute()
+    {
+        $status = strtoupper((string) ($this->effective_match_status ?? $this->match_status ?? $this->computed_match_status ?? 'PENDING'));
+
+        if ($status === 'COMPLETED' || $status === 'SENT TO FINANCE') {
+            return $status;
+        }
+
+        return $status;
+    }
+
+    public function getPaymentValidationStateAttribute()
+    {
+        $status = strtoupper((string) ($this->display_match_status ?? $this->effective_match_status ?? $this->match_status ?? $this->computed_match_status ?? 'PENDING'));
+
+        if ($status === 'SENT TO FINANCE') {
+            return 'sent_to_finance';
+        }
+
+        if ($status === 'COMPLETED') {
+            return 'validated';
+        }
+
+        if (str_contains($status, 'MISMATCH')) {
+            return 'payment_issue';
+        }
+
+        return 'pending_validation';
+    }
 }
