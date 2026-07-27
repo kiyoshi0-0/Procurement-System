@@ -12,20 +12,23 @@ class GoodsReceiptController extends Controller
 
     public function index()
 {
-    // Fetch all active receipts with order relations
-    $receipts = Receipt::with('purchaseOrder')
+    // Fetch all active receipts with order relations and items
+    $receipts = Receipt::with('purchaseOrder.items', 'purchaseOrder.supplier')
         ->latest()
         ->get();
 
-    // Use actual receipt status values for dashboard cards
-    $shipmentsPending = $receipts->where('status', 'Pending')->count();
+    // Count pending shipments from actual purchase orders (Confirmed or Sent, not yet Delivered)
+    $shipmentsPending = PurchaseOrder::whereIn('status', ['Confirmed', 'Sent'])
+        ->count();
     
     $discrepanciesCount = $receipts->filter(function ($receipt) {
-        return $receipt->inspection_status !== 'Passed'
-            || $receipt->effective_match_status !== 'MATCHED';
+        $isApproved = $receipt->status === 'Sent to Finance' || $receipt->status === 'Approved';
+        $hasMismatch = str_contains($receipt->effective_match_status, 'MISMATCH') 
+                      || $receipt->inspection_status !== 'Passed';
+        return !$isApproved && $hasMismatch;
     })->count();
 
-    $approvedCount = $receipts->where('status', 'Approved')->count();
+    $approvedCount = $receipts->where('status', 'Sent to Finance')->count();
 
     return view('receipts.goodreceipt', compact(
         'receipts', 
@@ -214,7 +217,7 @@ public function threeWayMatching()
 
     public function paymentValidation()
     {
-        $receipts = Receipt::latest()->get();
+        $receipts = Receipt::with('purchaseOrder.items', 'purchaseOrder.supplier')->latest()->get();
 
         $totalInvoices = $receipts->count();
         $approvedPaymentsCount = $receipts->filter(function ($receipt) {

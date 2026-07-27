@@ -107,9 +107,9 @@
                         {{ $receipt->display_po_number }}
                     @endif
                 </td>
-                <td class="px-5 py-4">{{ $receipt->supplier }}</td>
-                <td class="px-5 py-4">{{ $receipt->item_name }}</td>
-                <td class="px-5 py-4 text-center">{{ $receipt->po_quantity }}</td>
+                <td class="px-5 py-4">{{ $receipt->purchaseOrder?->supplier?->name ?? $receipt->supplier }}</td>
+                <td class="px-5 py-4">{{ $receipt->purchaseOrder?->items?->first()?->name ?? $receipt->item_name }}</td>
+                <td class="px-5 py-4 text-center">{{ $receipt->purchaseOrder?->items?->first()?->qty ?? $receipt->po_quantity }}</td>
                 <td class="px-5 py-4 text-center">{{ $receipt->gr_quantity }}</td>
                 <td class="px-5 py-4">{{ $receipt->warehouse }}</td>
                 <td class="px-5 py-4">
