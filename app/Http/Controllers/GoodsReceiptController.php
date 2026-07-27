@@ -12,20 +12,20 @@ class GoodsReceiptController extends Controller
 
     public function index()
 {
-    // Fetch all active receipts
+    // Fetch all active receipts with order relations
     $receipts = Receipt::with('purchaseOrder')
         ->latest()
         ->get();
 
-    // Compute counts dynamically using collection filters and model accessors
-    $shipmentsPending = $receipts->where('inspection_status', 'Pending')->count();
+    // Use actual receipt status values for dashboard cards
+    $shipmentsPending = $receipts->where('status', 'Pending')->count();
     
     $discrepanciesCount = $receipts->filter(function ($receipt) {
-        return $receipt->inspection_status !== 'Passed' 
+        return $receipt->inspection_status !== 'Passed'
             || $receipt->effective_match_status !== 'MATCHED';
     })->count();
 
-    $approvedCount = $receipts->whereNotNull('approved_at')->count();
+    $approvedCount = $receipts->where('status', 'Approved')->count();
 
     return view('receipts.goodreceipt', compact(
         'receipts', 
@@ -39,15 +39,23 @@ class GoodsReceiptController extends Controller
     public function approve($id)
     {
         $receipt = Receipt::findOrFail($id);
-        $receipt->inspection_status = 'Approved';
-        $receipt->invoice_price = $receipt->invoice_price ?? $receipt->invoice_price;
+
+        $receipt->inspection_status = 'Passed';
         $receipt->match_status = $receipt->computed_match_status;
         $receipt->status = $receipt->computed_match_status === 'MATCHED' ? 'Approved' : 'Pending';
         $receipt->approved_at = $receipt->computed_match_status === 'MATCHED' ? now() : null;
         $receipt->save();
 
-    return redirect()->route('receipts.index')->with('success', 'Receipt approved successfully!');
-}
+        if ($receipt->purchase_order_id) {
+            $purchaseOrder = PurchaseOrder::find($receipt->purchase_order_id);
+            if ($purchaseOrder) {
+                $purchaseOrder->status = $receipt->computed_match_status === 'MATCHED' ? 'Delivered' : $purchaseOrder->status;
+                $purchaseOrder->save();
+            }
+        }
+
+        return redirect()->route('receipts.index')->with('success', 'Receipt approved successfully!');
+    }
 
 
     public function edit($id)
@@ -113,7 +121,15 @@ class GoodsReceiptController extends Controller
 
         $receipt->save();
 
-        return redirect()->route('orders.list')->with('success', 'Purchase Order updated and synced successfully.');
+        if ($receipt->purchase_order_id) {
+            $purchaseOrder = PurchaseOrder::find($receipt->purchase_order_id);
+            if ($purchaseOrder) {
+                $purchaseOrder->status = $receipt->computed_match_status === 'MATCHED' ? 'Delivered' : $purchaseOrder->status;
+                $purchaseOrder->save();
+            }
+        }
+
+        return redirect()->route('orders.list')->with('success', 'Receipt updated and synced successfully.');
     }
 
 

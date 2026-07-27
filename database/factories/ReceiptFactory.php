@@ -12,7 +12,7 @@ class ReceiptFactory extends Factory
     public function definition(): array
     {
         static $sequence = 1;
-        $poNumber = 'PO-' . str_pad($sequence++, 3, '0', STR_PAD_LEFT);
+        $poNumber = 'PO-2026-' . str_pad($sequence++, 3, '0', STR_PAD_LEFT);
 
         $poQty = $this->faker->numberBetween(20, 50);
         

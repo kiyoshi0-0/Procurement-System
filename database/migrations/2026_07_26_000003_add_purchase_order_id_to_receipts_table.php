@@ -19,10 +19,9 @@ return new class extends Migration
             }
         });
 
-        DB::table('receipts')
-            ->join('purchase_orders', 'receipts.po_number', '=', 'purchase_orders.po_number')
-            ->whereNotNull('purchase_orders.id')
-            ->update(['receipts.purchase_order_id' => DB::raw('purchase_orders.id')]);
+        DB::table('receipts')->update([
+            'purchase_order_id' => DB::raw("(SELECT purchase_orders.id FROM purchase_orders WHERE purchase_orders.po_number = receipts.po_number LIMIT 1)")
+        ]);
     }
 
     public function down(): void

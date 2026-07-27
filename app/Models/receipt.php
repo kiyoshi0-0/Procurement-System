@@ -36,4 +36,17 @@ public function getEffectiveMatchStatusAttribute()
 {
     return $this->match_status ?? $this->computed_match_status;
 }
+
+    public function getDisplayPoNumberAttribute()
+    {
+        if ($this->relationLoaded('purchaseOrder') && $this->purchaseOrder) {
+            return $this->purchaseOrder->po_number;
+        }
+
+        if (preg_match('/^PO-(\d{1,3})$/', $this->po_number, $matches)) {
+            return 'PO-2026-' . str_pad($matches[1], 3, '0', STR_PAD_LEFT);
+        }
+
+        return $this->po_number;
+    }
 }

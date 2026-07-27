@@ -8,7 +8,7 @@
             <h1 class="text-2xl font-bold text-[#1E3A8A]">Purchase Requisition & Approval</h1>
             <p class="text-xs text-gray-400 mt-0.5">Submit and track computer parts purchase requests</p>
           </div>
-          <button onclick="openNewRequestModal()" class="bg-[#1E3A8A] text-white px-4 py-2 rounded-md text-sm font-medium shadow hover:bg-blue-900 transition">+ New Request</button>
+         
         </div>
 
         <!-- Dashboard Stats Row Layout -->

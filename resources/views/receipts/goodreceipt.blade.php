@@ -98,7 +98,15 @@
             @forelse($receipts ?? [] as $receipt)
             <tr class="hover:bg-slate-50 border-b">
                 <td class="px-5 py-4 font-semibold text-slate-500">{{ $receipt->gr_number }}</td>
-                <td class="px-5 py-4 font-bold text-blue-900">{{ $receipt->po_number }}</td>
+                <td class="px-5 py-4 font-bold text-gray-900 target-po">
+                    @if($receipt->purchaseOrder)
+                        <a href="{{ route('orders.details', $receipt->purchaseOrder->id) }}" class="hover:underline">
+                            {{ $receipt->purchaseOrder->po_number }}
+                        </a>
+                    @else
+                        {{ $receipt->display_po_number }}
+                    @endif
+                </td>
                 <td class="px-5 py-4">{{ $receipt->supplier }}</td>
                 <td class="px-5 py-4">{{ $receipt->item_name }}</td>
                 <td class="px-5 py-4 text-center">{{ $receipt->po_quantity }}</td>
@@ -136,6 +144,7 @@
                     <!-- Check/Approve Button -->
                     <form action="{{ route('receipts.approve', $receipt->id ?? $receipt->gr_number) }}" method="POST" style="display:inline;">
                         @csrf
+                        @method('PUT')
                         <button type="submit" class="btn btn-sm btn-light text-green-600 hover:text-green-800 mx-1" title="Approve">
                             <i class="fas fa-check"></i>
                         </button>
@@ -162,6 +171,7 @@
     </div>
     <form id="editReceiptForm" method="POST">
       @csrf
+      @method('PUT')
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1">Supplier</label>
@@ -282,7 +292,6 @@ function closeReceiptDetails() {
 }
 
 // Edit Modal
-// Edit Modal
 function openEditModal(id) {
     if (!id) {
         console.error("Receipt ID is missing!");
@@ -306,18 +315,21 @@ function openEditModal(id) {
             document.getElementById('edit_invoice_price').value = data.invoice_price ?? '';
             document.getElementById('edit_inspection_status').value = data.inspection_status ?? 'Passed';
             document.getElementById('edit_computed_match_status').value = data.effective_match_status ?? data.match_status ?? 'PENDING';
-            
+
             const form = document.getElementById('editReceiptForm');
             form.action = '/receipts/' + id;
-            
-            // Ensure standard POST method is used
             form.method = 'POST';
-            
-            // Remove any Laravel method spoofing fields if present
-            const spoofedMethod = form.querySelector('input[name="_method"]');
-            if (spoofedMethod) {
-                spoofedMethod.remove();
+
+            const existingMethod = form.querySelector('input[name="_method"]');
+            if (existingMethod) {
+                existingMethod.remove();
             }
+
+            const hiddenMethod = document.createElement('input');
+            hiddenMethod.type = 'hidden';
+            hiddenMethod.name = '_method';
+            hiddenMethod.value = 'PUT';
+            form.appendChild(hiddenMethod);
 
             updateComputedMatchStatus();
         })
