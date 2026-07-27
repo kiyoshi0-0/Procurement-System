@@ -22,40 +22,17 @@ class SyncReceiptsWithPOsSeeder extends Seeder
             $suppliers = collect([Supplier::factory()->create()]);
         }
         
-        // Seed 30 purchase orders
-        echo "\nCreating Purchase Orders...\n";
-        $purchaseOrders = [];
-        for ($i = 0; $i < 30; $i++) {
-            $supplier = $suppliers->random();
-            $po = PurchaseOrder::create([
-                'po_number' => 'PO-' . (101 + $i),
-                'supplier_id' => $supplier->id,
-                'date' => now()->subDays(rand(0, 30))->format('Y-m-d'),
-                'status' => ['Confirmed', 'Sent', 'Delivered'][rand(0, 2)],
-                'delivery_address' => "BLK 51 Lot 12A, Barangay San Andres 1, Dasmariñas, Cavite",
-            ]);
-            
-            // Create 1-2 items per PO
-            for ($j = 0; $j < rand(1, 2); $j++) {
-                PurchaseOrderItem::create([
-                    'purchase_order_id' => $po->id,
-                    'name' => ['Kingston Memory', 'Ryzen Processor', 'SSD Drive', 'Motherboard'][rand(0, 3)],
-                    'qty' => rand(5, 50),
-                    'price' => rand(500, 5000),
-                ]);
-            }
-            
-            $purchaseOrders[] = $po;
-            if (($i + 1) % 10 == 0) {
-                echo "  Created $i POs...\n";
-            }
+        // Use existing purchase orders only; do not create new ones here.
+        $purchaseOrders = PurchaseOrder::with(['items', 'supplier'])->get();
+        if ($purchaseOrders->isEmpty()) {
+            echo "\nNo existing purchase orders found. Receipts cannot be synced without purchase orders.\n";
+            return;
         }
-        echo "✓ Created " . count($purchaseOrders) . " Purchase Orders\n";
-        
-        // Create 30 receipts linked to POs
+
+        echo "\nFound " . $purchaseOrders->count() . " existing Purchase Orders.\n";
         echo "\nCreating Receipts linked to Purchase Orders...\n";
-        for ($i = 0; $i < count($purchaseOrders); $i++) {
-            $po = $purchaseOrders[$i]->load('items', 'supplier');
+        foreach ($purchaseOrders->take(30) as $i => $po) {
+            $po->load('items', 'supplier');
             $item = $po->items()->first();
             
             $poQty = $item?->qty ?? rand(10, 50);
