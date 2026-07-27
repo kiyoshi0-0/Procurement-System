@@ -75,7 +75,7 @@
             <h3 class="text-lg font-bold text-[#1E3A8A]">Revision Request History</h3>
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <div class="relative w-full sm:w-64">
-                <input type="text" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
+                <input id="requestSearchInput" type="search" autocomplete="off" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]" oninput="filterRequests(this.value)">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"></i>
               </div>
              <!-- Filter Dropdown Container -->
@@ -118,7 +118,7 @@
                   <th class="p-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 text-gray-600 font-medium">
+              <tbody id="request-table-rows" class="divide-y divide-gray-200 text-gray-600 font-medium">
                 
                 @php
                   $revisionRequests = $requests->filter(function($item) {
@@ -127,7 +127,7 @@
                 @endphp
 
                 @forelse($revisionRequests as $request)
-                <tr class="hover:bg-gray-50">
+                <tr id="row-req-{{ $request->id }}" class="hover:bg-gray-50">
                   <td class="p-4 font-bold text-gray-800">REQ-{{ $request->id }}</td>
                   <td class="p-4">{{ $request->dept }}</td>
                   <td class="p-4 text-ellipsis overflow-hidden max-w-45 whitespace-nowrap">{{ $request->item_name }}</td>
@@ -457,12 +457,33 @@
       toggleFilterDropdown();
     }
 
+    function filterRequests(query) {
+      const tbody = document.getElementById('request-table-rows');
+      if (!tbody) return;
+      const normalized = query.trim().toLowerCase();
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = normalized === '' || text.includes(normalized) ? '' : 'none';
+      });
+    }
+
     // Optional: Close filter dropdown when clicking outside
     window.addEventListener('click', function(e) {
       const dropdown = document.getElementById('filter-dropdown');
       const filterBtn = dropdown.previousElementSibling;
       if (!dropdown.contains(e.target) && !filterBtn.contains(e.target)) {
         dropdown.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('requestSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          filterRequests(e.target.value);
+        });
       }
     });
 

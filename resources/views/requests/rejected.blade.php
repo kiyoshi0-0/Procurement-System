@@ -74,7 +74,7 @@
             <h3 class="text-lg font-bold text-[#1E3A8A]">Rejected History</h3>
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <div class="relative w-full sm:w-64">
-                <input type="text" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
+                <input id="requestSearchInput" type="search" autocomplete="off" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]" oninput="filterRequests(this.value)">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"></i>
               </div>
              <!-- Filter Dropdown Container -->
@@ -117,25 +117,25 @@
                   <th class="p-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 text-gray-600 font-medium">
+              <tbody id="request-table-rows" class="divide-y divide-gray-200 text-gray-600 font-medium">
                 @php $hasRejected = false; @endphp
                 @foreach($requests as $request)
                   @if(strtolower($request->status) === 'rejected')
                     @php $hasRejected = true; @endphp
-                    <tr class="hover:bg-gray-50">
+                    <tr id="row-req-{{ $request->id }}" class="hover:bg-gray-50">
                       <td class="p-4 font-bold text-gray-800">REQ-{{ $request->id }}</td>
                       <td class="p-4">{{ $request->dept }}</td>
                       <td class="p-4">{{ $request->item_name }}</td>
                       <td class="p-4">
-                        <span class="px-2.5 py-0.5 rounded-full border font-semibold text-[10px] 
-                          {{ strtolower($request->priority) === 'high' ? 'bg-rose-50 text-rose-500 border-rose-200' : 'bg-gray-50 text-gray-500 border-gray-200' }}">
+                        <span class="px-3 py-1 rounded-full border font-bold text-[11px] 
+                          {{ strtolower($request->priority) === 'high' ? 'bg-rose-50 text-rose-500 border-rose-200' : (strtolower($request->priority) === 'medium' || strtolower($request->priority) === 'med' ? 'bg-amber-50 text-amber-500 border-amber-200' : 'bg-emerald-50 text-emerald-500 border-emerald-200') }}">
                           {{ ucfirst($request->priority) }}
                         </span>
                       </td>
                       <td class="p-4">{{ $request->created_at ? $request->created_at->format('Y-m-d') : '--' }}</td>
                       <td class="p-4">{{ $request->requestor }}</td>
                       <td class="p-4">
-                        <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-500 font-semibold text-[10px]">Rejected</span>
+                        <span class="px-3 py-1 rounded-full border border-rose-200 bg-rose-50 text-rose-500 font-bold text-[12px]">Rejected</span>
                       </td>
                       <td class="p-4 flex items-center justify-center space-x-4 text-gray-400">
                         
@@ -188,7 +188,7 @@
   <div id="sideDrawer" class="fixed inset-0 z-50 flex justify-end hidden">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity" onclick="closeDrawer()"></div>
     
-    <div class="bg-white w-full max-w-2xl h-full shadow-2xl relative z-10 flex flex-col justify-between border-l border-gray-200">
+    <div class="bg-white w-full max-w-xl h-full shadow-2xl relative z-10 flex flex-col justify-between border-l border-gray-200">
       
       <div class="overflow-y-auto flex-1 p-6 space-y-6">
         <div class="flex justify-between items-start">
@@ -314,10 +314,13 @@
       
       // Dynamic color styling matching the priority value
       document.getElementById('drawerPriorityBadge').innerText = data.priority;
-      if(data.priority.toLowerCase() === 'high') {
-         document.getElementById('drawerPriorityBadge').className = "text-xs font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-500";
+      const priorityClass = data.priority.toLowerCase();
+      if (priorityClass === 'high') {
+         document.getElementById('drawerPriorityBadge').className = "text-xs font-semibold px-2 py-0.5 rounded-full border border-rose-200 bg-rose-50 text-rose-500";
+      } else if (priorityClass === 'medium' || priorityClass === 'med') {
+         document.getElementById('drawerPriorityBadge').className = "text-xs font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-500";
       } else {
-         document.getElementById('drawerPriorityBadge').className = "text-xs font-semibold px-2 py-0.5 rounded bg-gray-50 text-gray-500";
+         document.getElementById('drawerPriorityBadge').className = "text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-500";
       }
       
       document.getElementById('badgeItems').innerText = "1";
@@ -458,12 +461,33 @@
       toggleFilterDropdown();
     }
 
+    function filterRequests(query) {
+      const tbody = document.getElementById('request-table-rows');
+      if (!tbody) return;
+      const normalized = query.trim().toLowerCase();
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = normalized === '' || text.includes(normalized) ? '' : 'none';
+      });
+    }
+
     // Optional: Close filter dropdown when clicking outside
     window.addEventListener('click', function(e) {
       const dropdown = document.getElementById('filter-dropdown');
       const filterBtn = dropdown.previousElementSibling;
       if (!dropdown.contains(e.target) && !filterBtn.contains(e.target)) {
         dropdown.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('requestSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          filterRequests(e.target.value);
+        });
       }
     });
 
