@@ -36,7 +36,7 @@ class PurchaseOrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'po_number' => 'required|unique:purchase_orders,po_number',
+            'po_number' => ['required', 'regex:/^PO-2026-\d{3}$/', 'unique:purchase_orders,po_number'],
             'date' => 'required|date',
             'supplier_id' => 'required|exists:suppliers,id',
             'status' => 'nullable|string',
@@ -96,7 +96,7 @@ class PurchaseOrderController extends Controller
         $purchaseOrder = PurchaseOrder::findOrFail($id);
 
         $validated = $request->validate([
-            'po_number' => 'required|unique:purchase_orders,po_number,' . $purchaseOrder->id,
+            'po_number' => ['required', 'regex:/^PO-2026-\d{3}$/', 'unique:purchase_orders,po_number,' . $purchaseOrder->id],
             'date' => 'required|date',
             'supplier_id' => 'required|exists:suppliers,id',
             'status' => 'nullable|string',

@@ -69,10 +69,6 @@ class Receipt extends Model
     {
         $status = strtoupper((string) ($this->effective_match_status ?? $this->match_status ?? $this->computed_match_status ?? 'PENDING'));
 
-        if ($status === 'COMPLETED' || $status === 'SENT TO FINANCE') {
-            return $status;
-        }
-
         return $status;
     }
 
@@ -93,5 +89,18 @@ class Receipt extends Model
         }
 
         return 'pending_validation';
+    }
+
+    public function getDisplayPoNumberAttribute()
+    {
+        if ($this->relationLoaded('purchaseOrder') && $this->purchaseOrder) {
+            return $this->purchaseOrder->po_number;
+        }
+
+        if (preg_match('/^PO-(\d{1,3})$/', $this->po_number, $matches)) {
+            return 'PO-2026-' . str_pad($matches[1], 3, '0', STR_PAD_LEFT);
+        }
+
+        return $this->po_number;
     }
 }

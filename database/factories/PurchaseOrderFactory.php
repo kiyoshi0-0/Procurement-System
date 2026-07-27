@@ -10,7 +10,7 @@ class PurchaseOrderFactory extends Factory {
 
     public function definition(): array {
         return [
-            'po_number' => 'PO-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'po_number' => 'PO-2026-' . str_pad($this->faker->unique()->numberBetween(1, 999), 3, '0', STR_PAD_LEFT),
             'date' => $this->faker->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
             'supplier_id' => 1,
             'status' => 'Confirmed',

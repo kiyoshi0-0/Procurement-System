@@ -458,7 +458,10 @@
 
  let selectedStatusFilter = 'All';
  let basePoIdCounter = Object.keys(purchaseOrdersState).length > 0 
-    ? Math.max(...Object.values(purchaseOrdersState).map(po => parseInt(po.po_number.replace('PO-', '')) || 100)) 
+    ? Math.max(...Object.values(purchaseOrdersState).map(po => {
+        const match = po.po_number.match(/PO-2026-(\d+)/) || po.po_number.match(/PO-(\d+)/);
+        return parseInt(match ? match[1] : '100', 10) || 100;
+      })) 
     : 103; 
  let currentEditingPoNumber = null; 
 
@@ -495,7 +498,7 @@
    document.getElementById('createPoBreadcrumb').innerText = "Create PO";
    
    basePoIdCounter++;
-   document.getElementById('wizardPoNumberInput').value = `PO-${basePoIdCounter}`;
+   document.getElementById('wizardPoNumberInput').value = `PO-2026-${String(basePoIdCounter).padStart(3, '0')}`;
    
    document.getElementById('wizardSupplierSelect').selectedIndex = 0;
    document.getElementById('wizardLineItemsList').innerHTML = `
