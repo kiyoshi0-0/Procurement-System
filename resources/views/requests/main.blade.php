@@ -77,7 +77,7 @@
             <h3 class="text-lg font-bold text-[#1E3A8A]">All Request History</h3>
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <div class="relative w-full sm:w-64">
-                <input type="text" placeholder="Search Request..." class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
+                <input id="requestSearchInput" type="search" autocomplete="off" placeholder="Search Request..." oninput="filterRequests(this.value)" class="w-full pl-8 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-[#00A86B]">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"></i>
               </div>
              <!-- Filter Dropdown Container -->
@@ -885,6 +885,17 @@
       
       // Hide dropdown after clicking
       toggleFilterDropdown();
+    }
+
+    function filterRequests(query) {
+      const tbody = document.getElementById('request-table-rows');
+      const rows = tbody.querySelectorAll('tr');
+      const normalizedQuery = query.trim().toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        row.style.display = rowText.includes(normalizedQuery) ? '' : 'none';
+      });
     }
 
     // Optional: Close filter dropdown when clicking outside
